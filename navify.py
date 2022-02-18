@@ -12,10 +12,15 @@ import spotipy
 from spotipy.oauth2 import SpotifyOAuth
 
 from urllib import request, parse
+import requests
+
+import io
+from PIL import Image
 import PySimpleGUI as sg
 
 from multiprocessing import Process
 
+# File checking
 from os.path import exists
 from os import walk
 
@@ -62,21 +67,85 @@ settings=[]
 vol=100
 
 # SPOTIFY STUFF
-os.environ['SPOTIPY_CLIENT_ID']='481da7d376c747408b5ec25f609c193b'
-os.environ['SPOTIPY_CLIENT_SECRET']='4ec619360c6e497a9ce1f126a3c10f93'
-os.environ['SPOTIPY_REDIRECT_URI']='http://localhost'
-
-scope = ["user-library-read", "user-library-modify"]
-scopes = ["https://www.googleapis.com/auth/youtube.force-ssl"]
-sp = spotipy.Spotify(auth_manager=SpotifyOAuth(scope=scope))
-
+#481da7d376c747408b5ec25f609c193b
+#4ec619360c6e497a9ce1f126a3c10f93
+#http://localhost
+		
 # LOCAL SERVER STUFF
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 port=6969
 s.bind(('', port))
 
+#-------------------------------------------------
+# SETUP FUNCTIONS
+#-------------------------------------------------
 
+def SpotSetup:
+	key=[]
+	while len(inp) == 0:
+		inp = input("Please enter your Spotify Client ID: ")
+	key.append(inp)
+	inp=""
+	while len(inp) == 0
+		inp = input("Please enter your Spotify Client Secret Key: ")
+	key.append(inp)
+	inp=""
+	while len(inp) == 0:
+		inp = input("Please enter yout Spotify Redirect URI: ")
+	key.append(inp)
+	f = open(home + "keys.pkl", 'wb')
+	pickle.dump(key, f)
+	f.close()
+	LoadSpotify()
+	
+if exists(home + "keys.pkl"):
+	key=[]
+	f = open(home + "keys.pkl", 'rb')
+	key = pickle.load(f)
+	f.close()
+	os.environ['SPOTIPY_CLIENT_ID']=key[0]
+	os.environ['SPOTIPY_CLIENT_SECRET']=key[1]
+	os.environ['SPOTIPY_REDIRECT_URI']=key[2]
+	LoadSpotify()
+else:
+	SpotSetup()
+
+def LoadSpotify():
+	try:
+		sp = spotipy.Spotify(auth_manager=SpotifyOAuth(scope=["user-library-read", "user-library-modify"]))
+	execpt:
+		print("Error, invalid Spotify settings.")
+		if exists(home + "keys.pkl"):
+			os.remove(home + "keys.pkl")
+		SpotSetup()
+		
+# Initializes setting files
+def SetupSettings():
+	if not exists(home + "info.pkl"):
+		f = open(home + "info.pkl", 'wb')
+		pickle.dump(["","","",""])
+		f.close()
+	if not exists(home + "settings.pkl"):
+		f = open(home + "settings.pkl", 'wb')
+		pickle.dump([100])
+		f.close()
+	if not exists(home + "recommend.pkl")
+		f = open(home + "recommend.pkl", 'wb')
+		pickle.dump(GenLikes()[0:5]
+		f.close()		
+		
+def GenLikes():
+	likes=[]
+	while True: 
+		likes.append(sp.current_user_saved_tracks(20, x))
+		x+=20
+		if (len(sp.current_user_saved_tracks(20, x)['items']) == 0):
+		    break
+	return likes
+
+SetupSettings()	    
+			    
 #-------------------------------------------------
 # DEFINE MAIN FUNCTIONS
 #-------------------------------------------------
@@ -354,7 +423,57 @@ def unlike(track):
 
 def navify(a, b):
 	pass
+			    
+#-------------------------------------------------
+# SUB-WINDOW LAYOUTS
+#-------------------------------------------------			    
+		
+# Song List
+Search = [
+	[
+	sg.Text("Search For Song: ", font=defaultFont,justification="center", background_color="#ccccdc", expand_x=True),
+	sg.Input(font=defaultFont, text_color="#ffffff", background_color="#aabbcf", enable_events=True, size=(25,1), focus=True, border_width=0, expand_x=True,  visible=True, key="-YOUTUBESEARCH-"),
+	sg.Button("Search", font=defaultFont,enable_events=True, button_color="#99aabf", mouseover_colors=("","#67778f"), border_width=0, key="-ENTER-")
+	]
+]
+Results = [
+	[
+	sg.Text("Results:", font=defaultFont,justification="center", background_color="#ccccdc", expand_x=True)
+	],
+	[
+	sg.Listbox(values=results, auto_size_text=True, background_color="#99aabf", font=defaultFont, text_color="#ffffff", size=(25,1), no_scrollbar=True,disabled=True, enable_events=True,  expand_y=True, expand_x=True, key="-RESULTS-")]
+	]
 
+Name = [
+	[
+	sg.Text("Name: ", font=defaultFont,justification="center", background_color="#ccccdc", expand_x=True),
+	sg.Input(font=defaultFont, text_color="#ffffff", background_color="#aabbcf", enable_events=True, size=(25,1), focus=True, border_width=0, expand_x=True, disabled=True, visible=True, key="-NAME-"),
+	sg.Button("Submit", font=defaultFont,enable_events=True, button_color="#99aabf", mouseover_colors=("","#67778f"), border_width=0, key="-SUBMIT-", disabled=True)
+	]
+]
+
+layoutAdd = [
+	[
+	sg.Column(Search, background_color="#ccccdc", expand_y=True, expand_x=True)
+	],
+	[
+	sg.Column(Results, background_color="#ccccdc", expand_y=True, expand_x=True)
+	],
+	[
+	sg.Column(Name, background_color="#ccccdc", expand_y=True, expand_x=True)
+	],
+	[
+	sg.Listbox(values=folders, auto_size_text=True, background_color="#99aabf", font=defaultFont, text_color="#ffffff", size=(25,1), no_scrollbar=True,disabled=False, enable_events=True,  expand_y=True, expand_x=True, key="-CREATE-"),
+	sg.VSeparator(color=None),
+	sg.Button("Cancel", font=defaultFont,enable_events=True, button_color="#99aabf", mouseover_colors=("","#67778f"), border_width=0, key="-CANCEL-"),
+	sg.Button("Open", font=defaultFont,enable_events=True, button_color="#99aabf", mouseover_colors=("","#67778f"), border_width=0, key="-OPEN-", disabled=True),
+	sg.VSeparator(color=None),
+	sg.Image(source=None, size=(256,192), key="-IMAGE-")
+	]
+]
+
+layoutAdd2 = []		    
+			    
 #-------------------------------------------------
 # DEFINE SUB-WINDOWS
 #-------------------------------------------------
