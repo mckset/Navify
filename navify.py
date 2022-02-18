@@ -59,12 +59,6 @@ isPlaying=False # Set to True When a Song Gets Played
 # NAVIFY STUFF
 header={'User-Agent' : 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:23.0) Gecko/20100101 Forefox/23.0'}
 
-recId=[]
-recList=[]
-recTrack=[]
-recArtist=[]
-settings=[]
-vol=100
 
 # SPOTIFY STUFF
 #481da7d376c747408b5ec25f609c193b
@@ -81,7 +75,7 @@ s.bind(('', port))
 # SETUP FUNCTIONS
 #-------------------------------------------------
 
-def SpotSetup:
+def spotSetup:
 	key=[]
 	while len(inp) == 0:
 		inp = input("Please enter your Spotify Client ID: ")
@@ -97,7 +91,7 @@ def SpotSetup:
 	f = open(home + "keys.pkl", 'wb')
 	pickle.dump(key, f)
 	f.close()
-	LoadSpotify()
+	loadSpotify()
 	
 if exists(home + "keys.pkl"):
 	key=[]
@@ -107,21 +101,21 @@ if exists(home + "keys.pkl"):
 	os.environ['SPOTIPY_CLIENT_ID']=key[0]
 	os.environ['SPOTIPY_CLIENT_SECRET']=key[1]
 	os.environ['SPOTIPY_REDIRECT_URI']=key[2]
-	LoadSpotify()
+	loadSpotify()
 else:
-	SpotSetup()
+	spotSetup()
 
-def LoadSpotify():
+def loadSpotify():
 	try:
 		sp = spotipy.Spotify(auth_manager=SpotifyOAuth(scope=["user-library-read", "user-library-modify"]))
 	execpt:
 		print("Error, invalid Spotify settings.")
 		if exists(home + "keys.pkl"):
 			os.remove(home + "keys.pkl")
-		SpotSetup()
+		spotSetup()
 		
 # Initializes setting files
-def SetupSettings():
+def setupSettings():
 	if not exists(home + "info.pkl"):
 		f = open(home + "info.pkl", 'wb')
 		pickle.dump(["","","",""])
@@ -132,10 +126,10 @@ def SetupSettings():
 		f.close()
 	if not exists(home + "recommend.pkl")
 		f = open(home + "recommend.pkl", 'wb')
-		pickle.dump(GenLikes()[0:5]
+		pickle.dump(genLikes()[0:5]
 		f.close()		
 		
-def GenLikes():
+def genLikes():
 	likes=[]
 	while True: 
 		likes.append(sp.current_user_saved_tracks(20, x))
@@ -144,13 +138,13 @@ def GenLikes():
 		    break
 	return likes
 
-SetupSettings()	    
+setupSettings()	    
 			    
 #-------------------------------------------------
 # DEFINE MAIN FUNCTIONS
 #-------------------------------------------------
 
-def Play(x):
+def play(x):
 	norm='--af-add=dynaudnorm=g=3:f=500:r=0:p=0.95:n=0:m=100'
 	track=ID[x]
 	trackID=ID[x]    
@@ -422,7 +416,68 @@ def unlike(track):
 	sp.current_user_saved_tracks_delete([track])
 
 def navify(a, b):
-	pass
+	recList=[]
+    	recTrack=[]
+    	recArtist=[]  
+	recID=[]
+	fText=""
+
+	# Sets up the track list used to grab recommendations
+	if exists(home + 'recommend.pkl'):
+		f = open(home + 'recommend.pkl', 'rb')
+		tracks = pickle.load(f)
+		f.close()
+	else:
+		print("NOTICE: Recommended tracks list is not set up. Defaulting to the first 5 liked songs.")
+			    
+	# Sets up the playlist to use based off of the first 5 tracks in the liked playlist
+	rec=sp.recommendations(seed_tracks=tracks, limit=50)
+    
+	# Checks to see if a track is in the blacklist
+	for i in range(0,49):
+		if not exists(home + 'blacklist/' + str(rec['tracks'][i]['id'])):
+			recTrack.append(str(rec['tracks'][i]['name']))
+			recArtist.append(str(rec['tracks'][i]['artists'][0]['name']))
+			recList.append(str(rec['tracks'][i]['name']) + " " + str(rec['tracks'][i]['artists'][0]['name']))
+			recId.append(rec['tracks'][i]['id'])
+		else:
+			recTrack.append("skip")
+			recArtist.append("skip")
+			recList.append("skip")
+			recId.append("skip")
+
+        # Checks to see if a track is in the cache directory and caches it if not
+	tracksName=[]    
+	for i in range(0,len(recId)):
+		if not exists(home + "cache/" + recId[i]) and recId[i] != "skip":
+			fText=str(recTrack[i]) + " - " + str(recArtist[i])
+			fText = re.sub(r'[^\x00-\x7f]',r'', fText)
+			name=fText
+		for x in range(0,len(fText)):
+			if " " in fText[x:x+1]:
+				fText=fText[0:x] + "+" + fText[x+1:]            
+			search(recList[i], recId[i], name, fText)
+	
+	# Gets tracks info from cache
+	for i in range(0,len(recId)):
+		currentFile = subprocess.Popen(["cat", home + "cache/" + recId[i]], stdout=subprocess.PIPE, text=True).communicate()[0]                    
+		tracksName.append(currentFile[0:43]) # Appends YouTube link
+	return tracksName
+
+def search(string, cache, name, url):       
+	req=request.Request("https://youtube.com/results?search_query=" + url, headers=header)
+	U = request.urlopen(req)
+	data = U.read().decode('utf-8')
+    
+	for i in range(0,len(data)):
+		if "videoid" in data[i:i+7].lower() and not "videoids" in data[i:i+8].lower():
+			video=data[i+10:i+21]
+			break
+    
+	f = open("/home/seth/.navi/navify/cache/" + str(cache) , "w")
+	f.write("https://www.youtube.com/watch?v=" + video + ";" + name + " " + str(len("https://www.youtube.com/watch?v=" + video)))
+	f.close()
+        
 			    
 #-------------------------------------------------
 # SUB-WINDOW LAYOUTS
@@ -478,13 +533,20 @@ layoutAdd2 = []
 # DEFINE SUB-WINDOWS
 #-------------------------------------------------
 
-def add():
+def Add():
+	results=[]
+
+	temp=next(walk("/home/seth/.navi/navify/playCache/"), (None, None, []))[1]
+	temp.sort()
+	folders=["---create new---"]
+
+	for i in range(0,len(temp)):
+		folders.append(temp[i])
+
+def Playlist():
 	pass
 
-def playlist():
-	pass
-
-def settings():
+def Settings():
 	pass
 
 #-------------------------------------------------
@@ -568,7 +630,7 @@ window = sg.Window("Navify", layout, keep_on_top=False, force_toplevel=False, no
 # MAIN LOOP
 #-------------------------------------------------
 
-def player():
+def Player():
 	global isPlaying
 	global level
 	global spotList
@@ -1076,17 +1138,23 @@ def Listener():
 	pickle.dump(info, f)
 	f.close()
 
-player()
+Player()
 
 #-------------------------------------------------
 # END AND CLEANUP
 #-------------------------------------------------
-window.close()
-s.shutdown(socket.SHUT_RDWR)
-sock.close()
-process = subprocess.Popen([home + "scripts/display/killmpv.sh"], stdout=subprocess.PIPE, text=True)
+		  
+window.close() # Closes the window
+s.shutdown(socket.SHUT_RDWR) # Shuts down the server
+sock.close() # Ditto
+		  
+try:
+	p.join()
+except:
+	pass
+		  
+process = subprocess.Popen([home + "scripts/display/killmpv.sh"], stdout=subprocess.PIPE, text=True) # Stops the music player
 process=process.communicate()[0][4:]
-
 for i in range(0,len(process)):
 	if not " " in process[i:i+1]:
 		process=process[i:]
