@@ -454,21 +454,21 @@ Name = [
 
 layoutAdd = [
 	[
-	sg.Column(Search, background_color=background, expand_y=True, expand_x=True)
+	sg.Column(Search, background_color=background, expand_y=True, expand_x=True) # Search
 	],
 	[
-	sg.Column(Results, background_color=background, expand_y=True, expand_x=True)
+	sg.Column(Results, background_color=background, expand_y=True, expand_x=True) # Results
 	],
 	[
-	sg.Column(Name, background_color=background, expand_y=True, expand_x=True)
+	sg.Column(Name, background_color=background, expand_y=True, expand_x=True) # Song Name
 	],
 	[
 	sg.Listbox(values=folders, auto_size_text=True, background_color=foreground, font=defaultFont, text_color=text, size=(25,1), no_scrollbar=True,disabled=False, enable_events=True,  expand_y=True, expand_x=True, key="-ACREATE-"),
-	sg.VSeparator(color=None),
-	sg.Button("Cancel", font=defaultFont, enable_events=True, button_color=accent, mouseover_colors=hover, border_width=0, key="-ACANCEL-"),
+	sg.VSeparator(color=None), # Folders list
+	sg.Button("Cancel", font=defaultFont, enable_events=True, button_color=accent, mouseover_colors=hover, border_width=0, key="-ACANCEL-"), 
 	sg.Button("Open", font=defaultFont, enable_events=True, button_color=accent, mouseover_colors=hover, border_width=0, key="-AOPEN-", disabled=True),
 	sg.VSeparator(color=None),
-	sg.Image(source=None, size=(256,192), key="-IMAGE-")
+	sg.Image(source=None, size=(256,192), key="-IMAGE-") # Thumbnail
 	]
 ]
 
@@ -494,53 +494,53 @@ def settings():
 # Spotify Songs
 SongList = [
 	[
-	sg.Button(image_filename="/home/seth/.navi/navify/icons/search.png", enable_events=True, button_color="#99aabf", mouseover_colors=("","#67778f"), border_width=0, key="-SEARCH-"),
-	sg.Text("Songs", justification="center", background_color="#ccccdc",font=defaultFont,  expand_x=True),
-	sg.Button(image_filename="/home/seth/.navi/navify/icons/edit.png", enable_events=True, button_color="#99aabf", mouseover_colors=("","#67778f"), border_width=0, key="-EDIT-")
+	sg.Button(image_filename=home + "icons/search.png", enable_events=True, button_color=accent, mouseover_colors=hover, border_width=0, key="-SEARCH-"),
+	sg.Text("Songs", justification="center", background_color=background,font=defaultFont,  expand_x=True),
+	sg.Button(image_filename=home + "icons/edit.png", enable_events=True, button_color=accent, mouseover_colors=hover, border_width=0, key="-EDIT-")
 	],
 	[
-	sg.Listbox(values=spotList, background_color="#99aabf", font=defaultFont, text_color="#ffffff", no_scrollbar=True, size=(25,1), enable_events=True,  expand_y=True, expand_x=True, key="-SONGS-")], 
+	sg.Listbox(values=spotList, background_color=foreground, font=defaultFont, text_color=text, no_scrollbar=True, size=(25,1), enable_events=True,  expand_y=True, expand_x=True, key="-SONGS-")], 
 	[
-	sg.Input(font=defaultFont, text_color="#ffffff", background_color="#aabbcf", enable_events=True, size=(25,1), focus=True, border_width=0, expand_x=True, disabled=True, visible=True, key="-INSEARCH-")
+	sg.Input(font=defaultFont, text_color=text, background_color=foreground, enable_events=True, size=(25,1), focus=True, border_width=0, expand_x=True, disabled=True, visible=True, key="-INSEARCH-")
 	]
 ]
 
 # Local Files
 Local = [
 	[
-	sg.Button(image_filename="/home/seth/.navi/navify/icons/add.png", enable_events=True, button_color="#99aabf", mouseover_colors=("","#67778f"), border_width=0, key="-ADD-"),
-	sg.Text("Local", justification="center", background_color="#ccccdc", font=defaultFont, expand_x=True),
-	sg.Button(image_filename="/home/seth/.navi/navify/icons/playlist.png", enable_events=True, button_color="#99aabf", mouseover_colors=("","#67778f"), border_width=0, key="-PLAYLIST-")
+	sg.Button(image_filename=home + "icons/add.png", enable_events=True, button_color=accent, mouseover_colors=hover, border_width=0, key="-ADD-"),
+	sg.Text("Local", justification="center", background_color=background, font=defaultFont, expand_x=True),
+	sg.Button(image_filename=hoem + "icons/playlist.png", enable_events=True, button_color=accent, mouseover_colors=hover, border_width=0, key="-PLAYLIST-")
 	],
 	[
-	sg.Listbox(values=localMain, auto_size_text=True, background_color="#99aabf", font=defaultFont, text_color="#ffffff", no_scrollbar=True, size=(1,1), enable_events=True, expand_y=True, expand_x=True, key="-LOCAL-")
+	sg.Listbox(values=localMain, auto_size_text=True, background_color=foreground, font=defaultFont, text_color=text, no_scrollbar=True, size=(1,1), enable_events=True, expand_y=True, expand_x=True, key="-LOCAL-")
 	] 
 ]
 
 # Queued Songs
 Queue = [
 	[
-	sg.Button(image_filename="/home/seth/.navi/navify/icons/navi.png", enable_events=True, button_color="#99aabf", mouseover_colors=("","#67778f"), border_width=0, key="-NAVIFY-"),
-	sg.Text("Queue", justification="center", background_color="#ccccdc", font=defaultFont, expand_x=True),
-	sg.Button(image_filename="/home/seth/.navi/navify/icons/settings.png", enable_events=True, button_color="#99aabf", mouseover_colors=("","#67778f"), border_width=0, key="-SETTINGS-")
+	sg.Button(image_filename=home + "icons/navi.png", enable_events=True, button_color=accent, mouseover_colors=hover, border_width=0, key="-NAVIFY-"),
+	sg.Text("Queue", justification="center", background_color=background, font=defaultFont, expand_x=True),
+	sg.Button(image_filename=home + icons/settings.png", enable_events=True, button_color=accent, mouseover_colors=hover, border_width=0, key="-SETTINGS-")
 	],
 	[
-	sg.Listbox(values=["[CLEAR]"], auto_size_text=True, background_color="#99aabf", font=defaultFont, text_color="#ffffff", no_scrollbar=True, size=(1,1), enable_events=True, key="-QUEUE-", expand_y=True, expand_x=True)
+	sg.Listbox(values=["[CLEAR]"], auto_size_text=True, background_color=foreground, font=defaultFont, text_color=text, no_scrollbar=True, size=(1,1), enable_events=True, key="-QUEUE-", expand_y=True, expand_x=True)
 	] 
 ]
 
 # Play Bar
 BottomBar = [
 	[
-	sg.Text(text="Now Playing: Nothing", size=(1,1), font=smallFont, expand_x=True, background_color="#99aabf", key="-PLAYING-"),
-	sg.Button(image_filename="/home/seth/.navi/navify/icons/nrepeat.png", enable_events=True, button_color="#99aabf", mouseover_colors=("","#67778f"), border_width=0, key="-REPEAT-"),
-	sg.Button(image_filename="/home/seth/.navi/navify/icons/blacklist.png", enable_events=True, button_color="#99aabf", mouseover_colors=("","#67778f"), border_width=0, key="-BLACKLIST-"),
-	sg.Button(image_filename="/home/seth/.navi/navify/icons/prev.png", enable_events=True, button_color="#99aabf", mouseover_colors=("","#67778f"), border_width=0),
-	sg.Button(image_filename="/home/seth/.navi/navify/icons/play.png", enable_events=True, button_color="#99aabf", mouseover_colors=("","#67778f"), border_width=0, key="-PLAY-"),
-	sg.Button(image_filename="/home/seth/.navi/navify/icons/next.png", enable_events=True, button_color="#99aabf", mouseover_colors=("","#67778f"), border_width=0, key="-SKIP-"),
-	sg.Button(image_filename="/home/seth/.navi/navify/icons/elike.png", enable_events=True, button_color="#99aabf", mouseover_colors=("","#67778f"), border_width=0, key="-LIKE-"),
-	sg.Button(image_filename="/home/seth/.navi/navify/icons/nshuffle.png", enable_events=True, button_color="#99aabf", mouseover_colors=("","#67778f"), border_width=0, key="-SHUFFLE-"),
-	sg.Text("0:00/0:00", justification="right", font=smallFont, size=(1,1), expand_x=True, background_color="#99aabf", key="-TIME-")    
+	sg.Text(text="Now Playing: Nothing", size=(1,1), font=smallFont, expand_x=True, background_color=foreground, key="-PLAYING-"),
+	sg.Button(image_filename=home + "icons/nrepeat.png", enable_events=True, button_color=accent, mouseover_colors=hover, border_width=0, key="-REPEAT-"),
+	sg.Button(image_filename=home + "icons/blacklist.png", enable_events=True, button_color=accent, mouseover_colors=hover, border_width=0, key="-BLACKLIST-"),
+	sg.Button(image_filename=home + "icons/prev.png", enable_events=True, button_color=accent, mouseover_colors=hover, border_width=0,
+	sg.Button(image_filename=home + "icons/play.png", enable_events=True, button_color=accent, mouseover_colors=hover, border_width=0, key="-PLAY-"),
+	sg.Button(image_filename=home + "icons/next.png", enable_events=True, button_color=accent, mouseover_colors=hover, border_width=0, key="-SKIP-"),
+	sg.Button(image_filename=home + "icons/elike.png", enable_events=True, button_color=accent, mouseover_colors=hover, border_width=0, key="-LIKE-"),
+	sg.Button(image_filename=home + "icons/nshuffle.png", enable_events=True, button_color=accent, mouseover_colors=hover, border_width=0, key="-SHUFFLE-"),
+	sg.Text("0:00/0:00", justification="right", font=smallFont, size=(1,1), expand_x=True, background_color=foreground, key="-TIME-")    
 	]
 ]
 
@@ -554,15 +554,15 @@ layout = [
 	sg.Column(Queue, background_color="#ccccdc",expand_y=True, expand_x=True) # Queued Songs
 	],
 	[
-	sg.Slider(range=(0,1), default_value=0, enable_events=True, background_color="#99aabf", trough_color="#99aabf", orientation='h', disable_number_display=True, border_width = 0, expand_x=True, key="-BAR-") # Progress Bar
+	sg.Slider(range=(0,1), default_value=0, enable_events=True, background_color=foreground, trough_color=foreground, orientation='h', disable_number_display=True, border_width = 1, expand_x=True, key="-BAR-") # Progress Bar
 	],
 	[
-	sg.Column(BottomBar, background_color="#ccccdc", justification="center", expand_x=True) # Play Bar
+	sg.Column(BottomBar, background_color=background, justification="center", expand_x=True) # Play Bar
 	]
 ]
 
 # Create the window
-window = sg.Window("Navify", layout, keep_on_top=False, force_toplevel=False, no_titlebar=False, resizable=True, auto_size_text=True, use_default_focus=True, alpha_channel=0.8, background_color="#ccccdc", border_depth=None)
+window = sg.Window("Navify", layout, keep_on_top=False, force_toplevel=False, no_titlebar=False, resizable=True, auto_size_text=True, use_default_focus=True, alpha_channel=0.8, background_color=background, border_depth=None)
 
 #-------------------------------------------------
 # MAIN LOOP
