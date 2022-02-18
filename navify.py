@@ -49,12 +49,8 @@ likes=[] # List of Liked Songs
 
 playerLoc="/.navi/navify/"
 home=os.path.expanduser('~') + playerLoc # Users Home Path
-path="" # Path to Local Songs
-level=0 # How Many Folders Down the Local Section is
 
 localMain=["ALL", "LOCAL CACHE","MUSIC"] # The Main Screen for the Local Section
-
-isPlaying=False # Set to True When a Song Gets Played
 
 # NAVIFY STUFF
 header={'User-Agent' : 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:23.0) Gecko/20100101 Forefox/23.0'}
@@ -409,13 +405,7 @@ def genList():
 		f.close()
 genList() 
 
-def like(track):
-	sp.current_user_saved_tracks_add([track])
-
-def unlike(track):
-	sp.current_user_saved_tracks_delete([track])
-
-def navify(a, b):
+def navify():
 	recList=[]
     	recTrack=[]
     	recArtist=[]  
@@ -429,6 +419,7 @@ def navify(a, b):
 		f.close()
 	else:
 		print("NOTICE: Recommended tracks list is not set up. Defaulting to the first 5 liked songs.")
+		tracks = likes[0:4]
 			    
 	# Sets up the playlist to use based off of the first 5 tracks in the liked playlist
 	rec=sp.recommendations(seed_tracks=tracks, limit=50)
@@ -477,8 +468,7 @@ def search(string, cache, name, url):
 	f = open("/home/seth/.navi/navify/cache/" + str(cache) , "w")
 	f.write("https://www.youtube.com/watch?v=" + video + ";" + name + " " + str(len("https://www.youtube.com/watch?v=" + video)))
 	f.close()
-        
-			    
+        			    
 #-------------------------------------------------
 # SUB-WINDOW LAYOUTS
 #-------------------------------------------------			    
@@ -536,7 +526,7 @@ layoutAdd2 = []
 def Add():
 	results=[]
 
-	temp=next(walk("/home/seth/.navi/navify/playCache/"), (None, None, []))[1]
+	temp=next(walk(home + "playCache/"), (None, None, []))[1]
 	temp.sort()
 	folders=["---create new---"]
 
@@ -631,16 +621,16 @@ window = sg.Window("Navify", layout, keep_on_top=False, force_toplevel=False, no
 #-------------------------------------------------
 
 def Player():
-	global isPlaying
-	global level
 	global spotList
 	global locTracks
 	global locPaths
 	
-	# Resets Values
+	# Default Values
+	isPlaying=False # Set to True When a Song Gets Played
+	path="" # Path to Local Songs
+	level=0 # How Many Folders Down the Local Section is
 	isCache=True # Set to true if the viewed folder is YouTube cache
-	queue=["[CLEAR]", ""] # Queued songs
-	isPlaying=False # Is there a song playing now  
+	queue=["[CLEAR]", ""] # Queued songs 
 	playing=""
 	duration=1 # How long the song lasts
 	current=1 # Current playtime position
@@ -654,7 +644,8 @@ def Player():
 	shuffle=0 # Is the player set to shuffle
 	prequeue=[] # Saved queue to be called when repeat is on
 	vAll=False # Set to true when local is viewing all tracks
-	cmd=""
+	cmd="" # Received command from taskbar
+		  
 	# Start of the Main Loop
 	while True:
 		event, values = window.read(timeout=100)
@@ -960,12 +951,12 @@ def Player():
 					if currentTrack == likes[i]:
 						liked=0
 						window["-LIKE-"].update(image_filename=home + "icons/elike.png")
-						unlike(currentTrack)
+						sp.current_user_saved_tracks_delete([track])
 						del likes[i]
 						break
 				if liked == 1:  
 					likes.append(current)
-					like(currentTrack)
+					sp.current_user_saved_tracks_add([track])
 					window["-LIKE-"].update(image_filename=home + "icons/like.png")            
 				pickle.dump(likes, f)
 				f.close()
