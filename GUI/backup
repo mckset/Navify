@@ -1,0 +1,520 @@
+# Navify GUI 
+
+import pickle
+import subprocess
+import os
+import sys
+import re
+from os.path import exists
+from os import walk
+from multiprocessing import Process
+
+import PySimpleGUI as sg
+import navify
+
+# Set to 0 to only list files in the playCache folder
+includeCache=1
+cacheI=-1
+
+loc=[]
+spotID=[]
+spotList=[]
+combinedList=[]
+ID=[]
+listed=[]
+localList=[]
+localID=[]
+noName=0
+track = ""
+name=""
+trackID=0
+tempID=[]
+
+if exists("/home/seth/.navi/navify/GUI/isPlaying.txt"):
+    os.remove("/home/seth/.navi/navify/GUI/isPlaying.txt")
+
+def Play(x):
+    track=ID[x]
+    trackID=ID[x]
+    name=listed[x]
+    print("Now Playing: " + name)
+    print(ID[x])
+    
+    if exists("/home/seth/.navi/navify/settings.pkl"):
+            f = open('/home/seth/.navi/navify/settings.pkl', 'rb')
+            settings = pickle.load(f)
+            f.close()
+            vol=settings[0]
+    if "\n" in name:
+        name=name[:len(name)-1]
+    name = re.sub(r'[^\x00-\x7f]',r'', name)
+
+    if len(name) > 16:
+        name = str(name)[0:len(name)] + " | "
+    # Stores the track for the display to read
+    info = ["1", "1", "1", name]
+
+
+    f = open('/home/seth/.navi/navify/info.pkl', 'wb')
+    pickle.dump(info, f)
+    f.close()
+
+    vol=100
+
+    f = open('/home/seth/.navi/navify/settings.pkl', 'rb')
+    vol=pickle.load(f)
+    vol=vol[0]
+    f.close()
+
+    subprocess.run(["mpv","--no-video", "--input-ipc-server=/tmp/mpvsocket", "--volume=" + str(vol), track])
+    if exists("/home/seth/.navi/navify/GUI/isPlaying.txt"):
+        os.remove("/home/seth/.navi/navify/GUI/isPlaying.txt")
+
+
+subprocess.run(["clear"])
+
+def genList(): 
+    global spotID
+    global spotList
+    global combinedList
+    global ID
+    global listed
+    global localList
+    global localID
+    global tempID
+    global loc    
+       
+    #print("Youtube Files: ")
+    # Lists only tracks in the playCache folder
+    folders=next(walk("/home/seth/.navi/navify/playCache/"), (None, None, []))[1]
+    ID=next(walk("/home/seth/.navi/navify/playCache/"), (None, None, []))[2]
+    locID=next(walk("/home/seth/.navi/navify/playCache/"), (None, None, []))[2]
+    for i in range(0,len(folders)):
+        tempID=(next(walk("/home/seth/.navi/navify/playCache/" + str(folders[i])), (None, None, []))[2])
+        for x in range(0,len(tempID)):
+            locID.append("playCache/" + str(folders[i]) + "/" + tempID[x])            
+            ID.append("https://www.youtube.com/watch?v=" + tempID[x])            
+    listed=[]
+
+    for i in range(0,len(locID)):
+        listed.append(subprocess.Popen(["cat", "/home/seth/.navi/navify/" + locID[i]], stdout=subprocess.PIPE, text=True).communicate()[0])
+            
+    listed[len(listed)-1]=listed[len(listed)-1][0:len(listed[len(listed)-1])-1]        
+    tempID=[]
+    sortID=[]
+    sortListed=[]
+    # Lists tracks in the Cache folder
+    if includeCache==1:
+        tempID=next(walk("/home/seth/.navi/navify/cache/"), (None, None, []))[2]
+        for i in range(0,len(tempID)):
+            currentFile = subprocess.Popen(["cat", "/home/seth/.navi/navify/cache/" + tempID[i]], stdout=subprocess.PIPE, text=True).communicate()[0]
+            if ";" in currentFile:
+                length=int(currentFile[len(currentFile)-3:])
+                sortID.append(currentFile[0:length])
+                sortListed.append(currentFile[length+1:len(currentFile)-3])
+
+    loc=[sortListed,tempID]
+    localID=ID
+    localList=listed    
+    oldID=ID
+    oldListed=listed
+    spotID=[]
+    spotList=[]
+    combinedList=[]
+    ID=[]
+    listed=[]
+
+    for i in range(0,len(sortID)):
+        combinedList.append([sortListed[i],sortID[i]])    
+    combinedList.sort()
+    cacheI=len(combinedList)-1   
+    for i in range(0, len(sortID)):
+        ID.append(combinedList[i][1])
+        listed.append(combinedList[i][0])   
+    spotID=ID
+    spotList=listed
+    x=0
+    for i in range(0,len(oldID)):
+        x=x+1
+        ID.append(oldID[i])
+        listed.append(oldListed[i])   
+    spotList=spotList[0:len(spotList)-x]      
+    r=len(localList)
+    #print(spotList)
+    for i in range(0,r):
+        if "\n" in localList[i]:
+            localList[i]=localList[i][0:len(localList[i])-1]
+    for i in range(0,len(listed)):
+        if "\n" in listed[i]:
+            listed[i]=listed[i][0:len(listed[i])-1]
+# Window layout
+genList()
+SongList = [
+    [
+    sg.Button(image_filename="/home/seth/.navi/navify/icons/search.png", enable_events=True, button_color="#99aabf", mouseover_colors=("","#67778f"), border_width=0, key="-SEARCH-"),
+    sg.Text("Songs", justification="center", background_color="#ccccdc", expand_x=True),
+    sg.Button(image_filename="/home/seth/.navi/navify/icons/edit.png", enable_events=True, button_color="#99aabf", mouseover_colors=("","#67778f"), border_width=0, key="-EDIT-")
+],
+    [sg.Listbox(values=spotList, auto_size_text=True, background_color="#99aabf", font="Inter 8", text_color="#ffffff", no_scrollbar=True, size=(25,1), enable_events=True,  expand_y=True, expand_x=True, key="-SONGS-")], 
+    [sg.Input(font="Inter 8", text_color="#ffffff", background_color="#aabbcf", enable_events=True, size=(25,1), border_width=0, expand_x=True, disabled=True, visible=True, key="-INSEARCH-")]
+]
+
+# Local Files
+Local = [
+    [
+    sg.Button(image_filename="/home/seth/.navi/navify/icons/edit.png", enable_events=True, button_color="#99aabf", mouseover_colors=("","#67778f"), border_width=0, key="-HOLDER1-"),
+    sg.Text("Local", justification="center", background_color="#ccccdc", expand_x=True),
+    sg.Button(image_filename="/home/seth/.navi/navify/icons/edit.png", enable_events=True, button_color="#99aabf", mouseover_colors=("","#67778f"), border_width=0, key="-HOLDER2-")
+
+    ],
+    [sg.Listbox(values=localList, auto_size_text=True, background_color="#99aabf", font="Inter 8", text_color="#ffffff", no_scrollbar=True, size=(1,1), enable_events=True, expand_y=True, expand_x=True, key="-LOCAL-")] 
+]
+
+Queue = [
+    [
+    sg.Button(image_filename="/home/seth/.navi/navify/icons/edit.png", enable_events=True, button_color="#99aabf", mouseover_colors=("","#67778f"), border_width=0, key="-NAVIFY-"),
+    sg.Text("Queue", justification="center", background_color="#ccccdc", expand_x=True),
+    sg.Button(image_filename="/home/seth/.navi/navify/icons/edit.png", enable_events=True, button_color="#99aabf", mouseover_colors=("","#67778f"), border_width=0, key="-PLAYALL-")
+    ],
+    [sg.Listbox(values=[], auto_size_text=True, background_color="#99aabf", font="Inter 8", text_color="#ffffff", no_scrollbar=True, size=(1,1), enable_events=True, key="-QUEUE-", expand_y=True, expand_x=True)] 
+]
+
+# Play Bar
+BottomBar = [
+    [
+    sg.Text(text="Now Playing: Nothing", size=(1,1), font="Inter 6", expand_x=True, background_color="#99aabf", key="-PLAYING-"),
+    sg.Button(image_filename="/home/seth/.navi/navify/icons/blacklist.png", enable_events=True, button_color="#99aabf", mouseover_colors=("","#67778f"), border_width=0),
+    sg.Button(image_filename="/home/seth/.navi/navify/icons/prev.png", enable_events=True, button_color="#99aabf", mouseover_colors=("","#67778f"), border_width=0),
+    sg.Button(image_filename="/home/seth/.navi/navify/icons/play.png", enable_events=True, button_color="#99aabf", mouseover_colors=("","#67778f"), border_width=0, key="-PLAY-"),
+    sg.Button(image_filename="/home/seth/.navi/navify/icons/next.png", enable_events=True, button_color="#99aabf", mouseover_colors=("","#67778f"), border_width=0, key="-SKIP-"),
+    sg.Button(image_filename="/home/seth/.navi/navify/icons/elike.png", enable_events=True, button_color="#99aabf", mouseover_colors=("","#67778f"), border_width=0),
+    sg.Text("0:00/0:00", justification="right", font="Inter 6", size=(1,1), expand_x=True, background_color="#99aabf", key="-TIME-")    
+    ]
+]
+
+
+layout = [
+    [
+    sg.Column(Local, background_color="#ccccdc", expand_y=True, expand_x=True),
+    sg.VSeparator(color=None),
+    sg.Column(SongList, background_color="#ccccdc",expand_y=True, expand_x=True),
+    sg.VSeparator(color=None),
+    sg.Column(Queue, background_color="#ccccdc",expand_y=True, expand_x=True)
+    ],
+    [sg.ProgressBar(max_value=1, bar_color=("#22dddd","#67778f"), expand_x=True, key="-BAR-")],    
+    [sg.Column(BottomBar, background_color="#ccccdc", justification="center", expand_x=True)]
+]
+
+
+# Create the window
+window = sg.Window("Navify", layout, keep_on_top=False, force_toplevel=False, no_titlebar=False, resizable=True, auto_size_text=True, use_default_focus=True, alpha_channel=0.8, background_color="#ccccdc", border_depth=None)
+# Create an event loop
+
+queue=[]
+isPlaying=0
+x=0
+duration=1
+current=1
+search=True
+play=False
+edit=False
+editI=0
+editName=""
+
+def checkLike():
+    pass
+
+def info(name):
+    for i in range(0,len(loc)):
+        if name == loc[0][i]:
+           info = [1, 1, tempList[0][i], tempList[1][i]]
+           f = open('/home/seth/.navi/navify/info.pkl', 'wb')
+           pickle.dump(info, f)
+           f.close()  
+
+while True:
+    event, values = window.read(timeout=100)
+
+    # Progress bar stuff
+    if isPlaying == 1:
+        try:
+            duration = subprocess.Popen(["/home/seth/.navi/navify/GUI/getTime.sh", "1"], stdout=subprocess.PIPE, text=True)
+            current = subprocess.Popen(["/home/seth/.navi/navify/GUI/getTime.sh", "2"], stdout=subprocess.PIPE, text=True)
+            duration=duration.communicate()[0][8:]
+            current=current.communicate()[0][8:]
+            
+            for i in range(0, len(duration)):
+                if duration[i:i+1] == ",":
+                    duration=float(duration[0:i])
+                    break
+            for i in range(0, len(current)):
+                if current[i:i+1] == ",":
+                    current=float(current[0:i])
+                    break
+            #print(str(current) + " " + str(duration))
+            window["-BAR-"].update_bar(current/duration)
+            min = int(current/60)
+            sec = int((current - min*60))
+            if sec >= 10:
+                current = str(min) + ":" + str(sec)
+            else:
+                current = str(min) + ":0" + str(sec)
+            min = int(duration/60)
+            sec = int((duration - min*60))
+            if sec > 10:
+                duration = str(min) + ":" + str(sec)
+            else:
+                duration = str(min) + ":0" + str(sec)
+            current = current + "/" + duration
+            window["-TIME-"].update(current)
+        except:
+            pass
+    # Resets after the song is finished
+    if isPlaying==1 and not exists("/home/seth/.navi/navify/GUI/isPlaying.txt"):
+        p.join()
+        isPlaying=0
+
+    # Checks if there are songs queued
+    if len(queue) > 0 and isPlaying == 0:
+        for i in range(0, len(listed)):
+            if (str(listed[i]) == str(queue[0])):
+                subprocess.call(["/home/seth/.navi/navify/GUI/createPlaying.sh"])                
+                window["-PLAYING-"].update("Now Playing: " + listed[i])
+                p = Process(target=Play, args=(i,))
+                p.start()
+                info(queue[0])
+                del queue[0]              
+                window["-QUEUE-"].update(values=queue)
+                x=0                
+                break
+
+    # Checks if a song is playing   
+    if exists("/home/seth/.navi/navify/GUI/isPlaying.txt") and isPlaying == 0:
+        isPlaying=1
+
+
+    # END OF SONG WITH NO QUEUE EVENT    
+    if len(queue) == 0 and isPlaying == 0:
+        window["-PLAY-"].update(image_filename="/home/seth/.navi/navify/icons/play.png")
+        window["-PLAYING-"].update("Now Playing: Nothing")
+        window["-TIME-"].update("0:00/0:00")
+        window["-BAR-"].update_bar(0)
+        play=False
+
+    # LOCAL SONG EVENT
+    if event == "-LOCAL-": 
+        if edit == False: 
+            #print(str(values["-LOCAL-"][0]))            
+            # Checks if a song is playing
+            for i in range(0, len(listed)):
+                if (str(listed[i]) == str(values["-LOCAL-"][0])):
+                    queue.append(listed[i])
+                    window["-QUEUE-"].update(values=queue)
+                    break
+            """
+            # If a song is not playing...
+            if isPlaying == 0:
+                #print(values["-LOCAL-"][0])
+                for i in range(0, len(listed)):
+                    #print(str(listed[i]))
+                    if (str(listed[i]) == str(values["-LOCAL-"][0])):
+                        subprocess.call(["/home/seth/.navi/navify/GUI/createPlaying.sh"])             
+                        window["-PLAYING-"].update("Now Playing: " + listed[i])                
+                        isPlaying=1
+                        play=True                
+                        p = Process(target=Play, args=(i,))
+                        p.start()
+                        window["-PLAY-"].update(image_filename="/home/seth/.navi/navify/icons/pause.png")
+                                        
+                        break
+            """
+        if edit == True:
+            window["-INSEARCH-"].update(disabled=False)
+            window["-INSEARCH-"].update(str(values["-LOCAL-"][0]))
+            for i in range(0, len(listed)):
+                if (str(listed[i]) == str(values["-LOCAL-"][0])):
+                    editI=i
+                    break
+            
+
+
+
+    # SONG SELECTED EVENT
+    if event == "-SONGS-":
+        if edit == False:
+            # Checks if the song needs to be added to queue
+            if isPlaying == 1:
+                for i in range(0, len(listed)):
+                    if (str(listed[i]) == str(values["-SONGS-"][0])):
+                        queue.append(listed[i])
+                        window["-QUEUE-"].update(values=queue)
+                        break
+            # Checks if no songs are playing
+            if isPlaying == 0:
+                for i in range(0, len(listed)):
+                    if (str(listed[i]) == str(values["-SONGS-"][0])):
+                        subprocess.call(["/home/seth/.navi/navify/GUI/createPlaying.sh"])
+                        
+                        window["-PLAYING-"].update("Now Playing: " + listed[i])               
+                        play=True 
+                        p = Process(target=Play, args=(i,))
+                        p.start()                
+                        window["-PLAY-"].update(image_filename="/home/seth/.navi/navify/icons/pause.png")
+                        break
+        if edit == True:
+            window["-INSEARCH-"].update(disabled=False)
+            window["-INSEARCH-"].update(str(values["-SONGS-"][0]))
+            for i in range(0, len(listed)):
+                if (str(listed[i]) == str(values["-SONGS-"][0])):
+                    editI=i
+                    break
+
+    # QUEUE Event
+    if event == "-QUEUE-":
+        #print(values["-QUEUE-"][0])
+        for i in range(0,len(queue)):
+            if queue[i] == str(values["-QUEUE-"][0]):
+                del queue[i]
+                window["-QUEUE-"].update(values=queue)
+                break
+
+    # BUTTON EVENTS
+    
+    # Search
+    if event == "-SEARCH-" and edit == False:
+        if (search == False):
+            search=True
+            window["-INSEARCH-"].update("",disabled=True)
+            window["-SONGS-"].update(values=spotList)
+            window["-SEARCH-"].update(button_color="#99aabf")
+        else:
+            search=False
+            window["-SEARCH-"].update(button_color="#bbccdf")        
+            window["-INSEARCH-"].update(disabled=False)
+
+    
+    # EDIT CLICKED EVENT
+    if event == "-EDIT-":
+        if edit == False:
+            edit = True
+            search=True  
+            window["-SEARCH-"].update(button_color="#99aabf")
+            window["-EDIT-"].update(button_color="#bbccdf")
+        else:
+            window["-EDIT-"].update(button_color="#99aabf")
+            edit = False
+            print(len(spotList))
+            if len(editName) == 0:
+                window["-INSEARCH-"].update("")
+                window["-INSEARCH-"].update(disabled=True)
+            if len(editName) > 0 and editName != listed[editI]:
+                if editI < len(spotList):
+                    spotSID=" "
+                    for i in range(0,len(tempID)):
+                        text=subprocess.Popen(["cat", "/home/seth/.navi/navify/cache/" + tempID[i]], stdout=subprocess.PIPE, text=True).communicate()[0]
+                                                
+                        if ID[editI] in text:
+                            spotSID=tempID[i]
+                            #print(spotSID)
+                            break
+
+                    text=subprocess.Popen(["cat", "/home/seth/.navi/navify/cache/"
+ + spotSID], stdout=subprocess.PIPE, text=True).communicate()[0]
+                    f=open("/home/seth/.navi/navify/cache/" + spotSID, 'w')
+                    l=text[len(text)-3:]                
+                    f.write(text[0:int(l)] + ";" + editName + " " + l)
+                    f.close()
+                    window["-INSEARCH-"].update("")
+                    window["-INSEARCH-"].update(disabled=True)
+                    spotList[editI] = editName
+                    listed[editI] = editName                
+                    window["-SONGS-"].update(values=spotList)
+                else:
+                    edit = False
+                    if "\n" in ID[editI]:
+                        ID[editI] = ID[editI][0:len(ID[editI])-1]
+                    link=ID[editI][len(ID[editI])-11:]
+                    for i in range(0, len(locID)):                
+                        if link in locID[i]:
+                            if exists("/home/seth/.navi/navify/" + locID[i]):
+                                f=open("/home/seth/.navi/navify/" + locID[i], 'w')               
+                                f.write(editName)
+                                f.close()
+                                window["-INSEARCH-"].update("")
+                                window["-INSEARCH-"].update(disabled=True)
+                                for i in range(0, len(localList)):
+                                    if localList[i] == listed[editI]:                            
+                                        listed[editI] = editName
+                                        localList[i] = editName
+                                        break                
+                                window["-LOCAL-"].update(values=localList)
+                                break
+
+    # Search Box
+    if event == "-INSEARCH-":
+        #print(values["-INSEARCH-"])
+        if edit == False:
+            newList=[]
+            for i in range(0, len(spotList)):
+                if values["-INSEARCH-"].lower() in spotList[i].lower():
+                    newList.append(spotList[i])
+            window["-SONGS-"].update(values=newList)
+        if edit == True:
+            editName=str(values["-INSEARCH-"])
+
+    # NAVIFY EVENT
+    if event == "-NAVIFY-":
+        tempList = navify.genRec()
+        genList()
+        print(tempList)
+        window["-SONGS-"].update(values=spotList)
+        window["-PLAY-"].update(image_filename="/home/seth/.navi/navify/icons/pause.png")
+        for i in range(0,len(tempList)):
+            for x in range(0,len(ID)):
+                if tempList[i] == ID[x]:                
+                    queue.append(listed[x])
+                    break
+        window["-QUEUE-"].update(values=queue)
+    # PLAYALL
+    if event == "-PLAYALL-":
+        for i in range(0,len(listed)):
+            queue.append(listed[i])
+
+    # Skip/Next
+    if event == "-SKIP-" and isPlaying == 1:
+        os.remove("/home/seth/.navi/navify/GUI/isPlaying.txt")
+        process = subprocess.Popen(["/home/seth/.navi/navify/scripts/display/killmpv.sh"], stdout=subprocess.PIPE, text=True)
+        process=process.communicate()[0][4:]
+        window["-PLAY-"].update(image_filename="/home/seth/.navi/navify/icons/pause.png")
+        for i in range(0,len(process)):
+            if not " " in process[i:i+1]:
+                process=process[i:]
+                break
+        for i in range(0, len(process)):
+            if " " in process[i:i+1]:
+                process=process[0:i]
+                break
+        subprocess.run(["kill", process])        
+        #print(process)
+
+    # PLAY/PAUSE
+    if event == "-PLAY-":    
+        if play == True:
+            subprocess.run(["/home/seth/.navi/navify/scripts/display/pause.sh", "1"])
+            play = False
+            window["-PLAY-"].update(image_filename="/home/seth/.navi/navify/icons/play.png")   
+        else:
+            subprocess.run(["/home/seth/.navi/navify/scripts/display/pause.sh", "2"])
+            play = True
+            window["-PLAY-"].update(image_filename="/home/seth/.navi/navify/icons/pause.png")   
+
+    if event == "Blacklist" or event == sg.WIN_CLOSED:
+        break
+
+window.close()
+
+
+
+
+
+
