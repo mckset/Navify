@@ -431,42 +431,42 @@ def navify(a, b):
 # Song List
 Search = [
 	[
-	sg.Text("Search For Song: ", font=defaultFont,justification="center", background_color="#ccccdc", expand_x=True),
-	sg.Input(font=defaultFont, text_color="#ffffff", background_color="#aabbcf", enable_events=True, size=(25,1), focus=True, border_width=0, expand_x=True,  visible=True, key="-YOUTUBESEARCH-"),
-	sg.Button("Search", font=defaultFont,enable_events=True, button_color="#99aabf", mouseover_colors=("","#67778f"), border_width=0, key="-ENTER-")
+	sg.Text("Search For Song: ", font=defaultFont ,justification="center", background_color=background, expand_x=True),
+	sg.Input(font=defaultFont, text_color=text, background_color=foreground, enable_events=True, size=(25,1), focus=True, border_width=0, expand_x=True,  visible=True, key="-ASEARCH-"),
+	sg.Button("Search", font=defaultFont, enable_events=True, button_color=accent, mouseover_colors=hover, border_width=0, key="-AENTER-")
 	]
 ]
 Results = [
 	[
-	sg.Text("Results:", font=defaultFont,justification="center", background_color="#ccccdc", expand_x=True)
+	sg.Text("Results:", font=defaultFont, justification="center", background_color=background, expand_x=True)
 	],
 	[
-	sg.Listbox(values=results, auto_size_text=True, background_color="#99aabf", font=defaultFont, text_color="#ffffff", size=(25,1), no_scrollbar=True,disabled=True, enable_events=True,  expand_y=True, expand_x=True, key="-RESULTS-")]
+	sg.Listbox(values=results, auto_size_text=True, background_color=foreground, font=defaultFont, text_color=text, size=(25,1), no_scrollbar=True,disabled=True, enable_events=True,  expand_y=True, expand_x=True, key="-ARESULTS-")]
 	]
 
 Name = [
 	[
-	sg.Text("Name: ", font=defaultFont,justification="center", background_color="#ccccdc", expand_x=True),
-	sg.Input(font=defaultFont, text_color="#ffffff", background_color="#aabbcf", enable_events=True, size=(25,1), focus=True, border_width=0, expand_x=True, disabled=True, visible=True, key="-NAME-"),
-	sg.Button("Submit", font=defaultFont,enable_events=True, button_color="#99aabf", mouseover_colors=("","#67778f"), border_width=0, key="-SUBMIT-", disabled=True)
+	sg.Text("Name: ", font=defaultFont,justification="center", background_color=background, expand_x=True),
+	sg.Input(font=defaultFont, text_color=text, background_color=foreground, enable_events=True, size=(25,1), focus=True, border_width=0, expand_x=True, disabled=True, visible=True, key="-ANAME-"),
+	sg.Button("Submit", font=defaultFont,enable_events=True, button_color=accent, mouseover_colors=hover, border_width=0, key="-ASUBMIT-", disabled=True)
 	]
 ]
 
 layoutAdd = [
 	[
-	sg.Column(Search, background_color="#ccccdc", expand_y=True, expand_x=True)
+	sg.Column(Search, background_color=background, expand_y=True, expand_x=True)
 	],
 	[
-	sg.Column(Results, background_color="#ccccdc", expand_y=True, expand_x=True)
+	sg.Column(Results, background_color=background, expand_y=True, expand_x=True)
 	],
 	[
-	sg.Column(Name, background_color="#ccccdc", expand_y=True, expand_x=True)
+	sg.Column(Name, background_color=background, expand_y=True, expand_x=True)
 	],
 	[
-	sg.Listbox(values=folders, auto_size_text=True, background_color="#99aabf", font=defaultFont, text_color="#ffffff", size=(25,1), no_scrollbar=True,disabled=False, enable_events=True,  expand_y=True, expand_x=True, key="-CREATE-"),
+	sg.Listbox(values=folders, auto_size_text=True, background_color=foreground, font=defaultFont, text_color=text, size=(25,1), no_scrollbar=True,disabled=False, enable_events=True,  expand_y=True, expand_x=True, key="-ACREATE-"),
 	sg.VSeparator(color=None),
-	sg.Button("Cancel", font=defaultFont,enable_events=True, button_color="#99aabf", mouseover_colors=("","#67778f"), border_width=0, key="-CANCEL-"),
-	sg.Button("Open", font=defaultFont,enable_events=True, button_color="#99aabf", mouseover_colors=("","#67778f"), border_width=0, key="-OPEN-", disabled=True),
+	sg.Button("Cancel", font=defaultFont, enable_events=True, button_color=accent, mouseover_colors=hover, border_width=0, key="-ACANCEL-"),
+	sg.Button("Open", font=defaultFont, enable_events=True, button_color=accent, mouseover_colors=hover, border_width=0, key="-AOPEN-", disabled=True),
 	sg.VSeparator(color=None),
 	sg.Image(source=None, size=(256,192), key="-IMAGE-")
 	]
