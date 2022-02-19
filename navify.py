@@ -34,7 +34,7 @@ smallFont="Inter 32"
 # GUI Colors
 background="#ccccdc"
 foreground="#99aabf"
-accent="99aabf"
+accent="#99aabf"
 hover=("","#67778f")
 text="#ffffff"
 alpha=0.8
@@ -54,6 +54,7 @@ localMain=["ALL", "LOCAL CACHE","MUSIC"] # The Main Screen for the Local Section
 
 # NAVIFY STUFF
 header={'User-Agent' : 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:23.0) Gecko/20100101 Forefox/23.0'}
+sp=""
 
 
 # SPOTIFY STUFF
@@ -71,13 +72,24 @@ s.bind(('', port))
 # SETUP FUNCTIONS
 #-------------------------------------------------
 
-def spotSetup:
+def loadSpotify():
+	global sp
+	try:
+		sp = spotipy.Spotify(auth_manager=SpotifyOAuth(scope=["user-library-read", "user-library-modify"]))
+	except:
+		print("Error, invalid Spotify settings.")
+		if exists(home + "keys.pkl"):
+			os.remove(home + "keys.pkl")
+		spotSetup()
+
+def spotSetup():
 	key=[]
+	inp=""
 	while len(inp) == 0:
 		inp = input("Please enter your Spotify Client ID: ")
 	key.append(inp)
 	inp=""
-	while len(inp) == 0
+	while len(inp) == 0:
 		inp = input("Please enter your Spotify Client Secret Key: ")
 	key.append(inp)
 	inp=""
@@ -100,15 +112,6 @@ if exists(home + "keys.pkl"):
 	loadSpotify()
 else:
 	spotSetup()
-
-def loadSpotify():
-	try:
-		sp = spotipy.Spotify(auth_manager=SpotifyOAuth(scope=["user-library-read", "user-library-modify"]))
-	execpt:
-		print("Error, invalid Spotify settings.")
-		if exists(home + "keys.pkl"):
-			os.remove(home + "keys.pkl")
-		spotSetup()
 		
 # Initializes setting files
 def setupSettings():
@@ -120,9 +123,9 @@ def setupSettings():
 		f = open(home + "settings.pkl", 'wb')
 		pickle.dump([100])
 		f.close()
-	if not exists(home + "recommend.pkl")
+	if not exists(home + "recommend.pkl"):
 		f = open(home + "recommend.pkl", 'wb')
-		pickle.dump(genLikes()[0:5]
+		pickle.dump(genLikes()[0:5])
 		f.close()		
 		
 def genLikes():
@@ -140,8 +143,7 @@ setupSettings()
 # DEFINE MAIN FUNCTIONS
 #-------------------------------------------------
 
-def play(x):
-	norm='--af-add=dynaudnorm=g=3:f=500:r=0:p=0.95:n=0:m=100'
+def Play(x):
 	track=ID[x]
 	trackID=ID[x]    
 	vol=100
@@ -152,7 +154,7 @@ def play(x):
 		f.close()
 	vol=settings[0]
 
-	subprocess.run(["mpv","--no-video", "--input-ipc-server=/tmp/mpvsocket", norm, "--volume=" + str(vol), track])
+	subprocess.run(["mpv","--no-video", "--input-ipc-server=/tmp/mpvsocket", "--volume=" + str(vol), track])
 
 def playAll(select, isCache):
 	tracks=next(walk(select), (None, None, []))[2]
@@ -407,8 +409,8 @@ genList()
 
 def navify():
 	recList=[]
-    	recTrack=[]
-    	recArtist=[]  
+	recTrack=[]
+	recArtist=[]  
 	recID=[]
 	fText=""
 
@@ -486,7 +488,7 @@ Results = [
 	sg.Text("Results:", font=defaultFont, justification="center", background_color=background, expand_x=True)
 	],
 	[
-	sg.Listbox(values=results, auto_size_text=True, background_color=foreground, font=defaultFont, text_color=text, size=(25,1), no_scrollbar=True,disabled=True, enable_events=True,  expand_y=True, expand_x=True, key="-ARESULTS-")]
+	sg.Listbox(values=[], auto_size_text=True, background_color=foreground, font=defaultFont, text_color=text, size=(25,1), no_scrollbar=True,disabled=True, enable_events=True,  expand_y=True, expand_x=True, key="-ARESULTS-")]
 	]
 
 Name = [
@@ -508,7 +510,7 @@ layoutAdd = [
 	sg.Column(Name, background_color=background, expand_y=True, expand_x=True) # Song Name
 	],
 	[
-	sg.Listbox(values=folders, auto_size_text=True, background_color=foreground, font=defaultFont, text_color=text, size=(25,1), no_scrollbar=True,disabled=False, enable_events=True,  expand_y=True, expand_x=True, key="-ACREATE-"),
+	sg.Listbox(values=[], auto_size_text=True, background_color=foreground, font=defaultFont, text_color=text, size=(25,1), no_scrollbar=True,disabled=False, enable_events=True,  expand_y=True, expand_x=True, key="-ACREATE-"),
 	sg.VSeparator(color=None), # Folders list
 	sg.Button("Cancel", font=defaultFont, enable_events=True, button_color=accent, mouseover_colors=hover, border_width=0, key="-ACANCEL-"), 
 	sg.Button("Open", font=defaultFont, enable_events=True, button_color=accent, mouseover_colors=hover, border_width=0, key="-AOPEN-", disabled=True),
@@ -562,7 +564,7 @@ Local = [
 	[
 	sg.Button(image_filename=home + "icons/add.png", enable_events=True, button_color=accent, mouseover_colors=hover, border_width=0, key="-ADD-"),
 	sg.Text("Local", justification="center", background_color=background, font=defaultFont, expand_x=True),
-	sg.Button(image_filename=hoem + "icons/playlist.png", enable_events=True, button_color=accent, mouseover_colors=hover, border_width=0, key="-PLAYLIST-")
+	sg.Button(image_filename=home + "icons/playlist.png", enable_events=True, button_color=accent, mouseover_colors=hover, border_width=0, key="-PLAYLIST-")
 	],
 	[
 	sg.Listbox(values=localMain, auto_size_text=True, background_color=foreground, font=defaultFont, text_color=text, no_scrollbar=True, size=(1,1), enable_events=True, expand_y=True, expand_x=True, key="-LOCAL-")
@@ -574,7 +576,7 @@ Queue = [
 	[
 	sg.Button(image_filename=home + "icons/navi.png", enable_events=True, button_color=accent, mouseover_colors=hover, border_width=0, key="-NAVIFY-"),
 	sg.Text("Queue", justification="center", background_color=background, font=defaultFont, expand_x=True),
-	sg.Button(image_filename=home + icons/settings.png", enable_events=True, button_color=accent, mouseover_colors=hover, border_width=0, key="-SETTINGS-")
+	sg.Button(image_filename=home + "icons/settings.png", enable_events=True, button_color=accent, mouseover_colors=hover, border_width=0, key="-SETTINGS-")
 	],
 	[
 	sg.Listbox(values=["[CLEAR]"], auto_size_text=True, background_color=foreground, font=defaultFont, text_color=text, no_scrollbar=True, size=(1,1), enable_events=True, key="-QUEUE-", expand_y=True, expand_x=True)
@@ -587,7 +589,7 @@ BottomBar = [
 	sg.Text(text="Now Playing: Nothing", size=(1,1), font=smallFont, expand_x=True, background_color=foreground, key="-PLAYING-"),
 	sg.Button(image_filename=home + "icons/nrepeat.png", enable_events=True, button_color=accent, mouseover_colors=hover, border_width=0, key="-REPEAT-"),
 	sg.Button(image_filename=home + "icons/blacklist.png", enable_events=True, button_color=accent, mouseover_colors=hover, border_width=0, key="-BLACKLIST-"),
-	sg.Button(image_filename=home + "icons/prev.png", enable_events=True, button_color=accent, mouseover_colors=hover, border_width=0,
+	sg.Button(image_filename=home + "icons/prev.png", enable_events=True, button_color=accent, mouseover_colors=hover, border_width=0, key="-PREV-"),
 	sg.Button(image_filename=home + "icons/play.png", enable_events=True, button_color=accent, mouseover_colors=hover, border_width=0, key="-PLAY-"),
 	sg.Button(image_filename=home + "icons/next.png", enable_events=True, button_color=accent, mouseover_colors=hover, border_width=0, key="-SKIP-"),
 	sg.Button(image_filename=home + "icons/elike.png", enable_events=True, button_color=accent, mouseover_colors=hover, border_width=0, key="-LIKE-"),
@@ -1137,7 +1139,7 @@ Player()
 		  
 window.close() # Closes the window
 s.shutdown(socket.SHUT_RDWR) # Shuts down the server
-sock.close() # Ditto
+s.close() # Ditto
 		  
 try:
 	p.join()
