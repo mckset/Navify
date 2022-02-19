@@ -76,11 +76,9 @@ def loadSpotify():
 	global sp
 	try:
 		sp = spotipy.Spotify(auth_manager=SpotifyOAuth(scope=["user-library-read", "user-library-modify"]))
+		sp.current_user_saved_tracks(1, 1) # Attempts to gets the first liked song to let the program if the user needs to input a redirect like
 	except:
 		print("Error: invalid Spotify settings.\n")
-
-		if exists(home + "keys.pkl"):
-			os.remove(home + "keys.pkl")
 		spotSetup()
 
 def spotSetup():
@@ -145,7 +143,6 @@ def genLikes():
 	for i in range(0,len(results)):
 		for x in range(0,len(results[i]['items'])):
 			likes.append(results[i]['items'][x]['track']['id'])
-	sp.recommendations(seed_tracks=[likes[0]], limit=50) # Only to check if the user needs to input a redirect url
 	return likes
 
 setupSettings()	   
@@ -545,6 +542,150 @@ def Add():
 
 	for i in range(0,len(temp)):
 		folders.append(temp[i])
+		window = sg.Window("Add Song", layout, background_color="#ccccdc", border_depth=None)
+	search=""
+	video=[]
+	img=[]
+	links=[]
+	selected=""
+	text=[]
+	sfolder=""
+	content=""
+	name=""
+	while True:
+		event, values = window.read()
+		
+		if event == "-YOUTUBESEARCH-": 
+			search=values["-YOUTUBESEARCH-"]   
+
+		if event == "-ENTER-":
+			video=[]
+			img=[]
+			links=[]
+			selected=""
+			text=[]
+			sfolder=""
+			content=""
+			name=""
+			url=search
+			# Retrieves the song from Youtube
+			for i in range(0,len(search)):
+				if " " in search[i:i+1]:
+					url=url[0:i] + "+" + url[i+1:] 
+			req=request.Request("https://youtube.com/results?search_query=" + url, headers=header)
+			U = request.urlopen(req)
+			data = U.read().decode('utf-8')
+			for i in range(0,len(data)):
+				if "videoid" in data[i:i+7].lower() and not "videoids" in data[i:i+8].lower():
+					valid=1
+					for x in range(0,len(video)):
+						if video[x] == data[i+10:i+21]:
+							valid=0
+					if valid == 1:
+						video.append(data[i+10:i+21])
+						img.append("https://i.ytimg.com/vi/" + data[i+10:i+21] +"/hqdefault.jpg")
+						links.append("https://www.youtube.com/watch?v=" + data[i+10:i+21])
+						text.append("Unknown")
+						for a in range(i,i+1000):
+							if "\"title\":" in data[a:a+8]:
+								for y in range(a,i+1000):
+									if "\"}]" in data[y:y+3]:
+										text[len(text)-1] = data[a+26:y]
+										break
+								break  
+
+			window["-RESULTS-"].update(disabled=False)
+			window["-RESULTS-"].update(values=links)
+			window["-NAME-"].update(search)
+			window["-NAME-"].update(disabled=False)
+			name=search
+
+		if event == "-NAME-":
+			content=values["-NAME-"]
+
+		if event == "-RESULTS-":
+			window["-OPEN-"].update(disabled=False)
+			window["-SUBMIT-"].update(disabled=False)
+			selected=values["-RESULTS-"][0]
+			for i in range(0,len(links)):
+				if links[i] == values["-RESULTS-"][0]:
+					response = requests.get(img[i])    
+					pil_image = Image.open(io.BytesIO(response.content))
+					png_bio = io.BytesIO()
+					pil_image.save(png_bio, format="PNG")
+					png_data = png_bio.getvalue()
+
+			response.raw.decode_content = True
+			window["-IMAGE-"].update(data=png_data, size=(256,192), subsample=2)        
+			window["-NAME-"].update(text[i])
+			name=video[i]
+			content=text[i]
+
+		if event == "-CREATE-":
+			if values["-CREATE-"][0] != "---create new---":
+				sfolder=values["-CREATE-"][0]
+		else:
+			sfolder=""
+			fname=""
+			layout2 = [
+				[
+				sg.Text("Create A New Folder ", font=defaultFont,justification="center", background_color="#ccccdc", expand_x=True)
+				],
+				[
+				sg.Text("Name: ", justification="center",font=defaultFont, background_color="#ccccdc", expand_x=True),
+				sg.Input(font=defaultFont, text_color="#ffffff", background_color="#aabbcf", enable_events=True, size=(25,1), focus=True, border_width=0, expand_x=True, disabled=False, visible=True, key="-NAME2-"),
+				sg.Button("Create", enable_events=True,font=defaultFont, button_color="#99aabf", mouseover_colors=("","#67778f"), border_width=0, key="-CREATE2-", disabled=True),
+				sg.Button("Cancel", enable_events=True, font=defaultFont,button_color="#99aabf", mouseover_colors=("","#67778f"), border_width=0, key="-CANCEL2-", disabled=False)
+				]
+			]
+			window2 = sg.Window("New Folder", layout2, background_color="#ccccdc", border_depth=None)
+			while True:
+				event2, values2 = window2.read()
+
+				if event2 == "-CREATE2-" and len(fname) > 0:
+					subprocess.run(["mkdir", "/home/seth/.navi/navify/playCache/" + fname])
+					window2.close()
+				break
+                        
+				if event2 == "-NAME2-":
+					fname=values2["-NAME2-"]
+				if len(fname) > 0:
+					window2["-CREATE2-"].update(disabled=False)
+				else:
+					window2["-CREATE2-"].update(disabled=True)
+                        
+				if event2 == "-CANCEL2-":
+					window2.close()
+					break
+			temp=next(walk("/home/seth/.navi/navify/playCache/"), (None, None, []))[1]
+			folders=["---create new---"]
+			temp.sort()
+			for i in range(0,len(temp)):
+				folders.append(temp[i])
+			window["-CREATE-"].update(values=folders)
+            
+                
+
+		if event == "-OPEN-":
+			subprocess.run(["gio", "open", selected])
+
+		if len(name) > 0 and len(sfolder) > 0:
+			window["-SUBMIT-"].update(disabled=False)
+		else:
+			window["-SUBMIT-"].update(disabled=True)
+
+		if event == "-SUBMIT-":
+			if not exists("/home/seth/.navi/navify/playCache/" + sfolder + "/" + name):
+				subprocess.run(["touch", "/home/seth/.navi/navify/playCache/" + sfolder + "/" + name])
+			f = open("/home/seth/.navi/navify/playCache/" + sfolder + "/" + name, 'w')
+			f.write(content)
+			f.close()
+			window.close()
+			break
+
+		if event == "-CANCEL-":    
+			window.close()
+			break
 
 def Playlist():
 	pass
