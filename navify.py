@@ -257,9 +257,10 @@ def updateLocal(select, isCache):
 			if isCache==False:
 				if ".wav" in tracks[i] or ".ogg" in tracks[i] or ".mp3" in tracks[i]:
 					tempName[i] = tempName[i][0:len(tempName[i])-4]
+			"""
 			listed.append([select + "/" + tracks[i], tempName[i]])
 			ID.append(tempID[i])
-	
+			"""
 		for i in range(len(tracks)):
 			newList.append(tracks[i])
 	window["-LOCAL-"].update(values=newList)
@@ -370,7 +371,7 @@ def genList():
 	combinedList=[]    
 	level=0
 
-    # Lists tracks in the Cache folder (Spotify Cache)
+   	# Lists tracks in the Cache folder (Spotify Cache)
 	tempID=next(walk(home + "cache/"), (None, None, []))[2]
 	for i in range(len(tempID)):
 		currentFile = subprocess.Popen(["cat", home + "cache/" + tempID[i]], stdout=subprocess.PIPE, text=True).communicate()[0]
@@ -414,6 +415,7 @@ def genList():
 		likes = pickle.load(f)
 		f.close()
 genList() 
+viewAllCondense(viewAll(home[0:len(home) - len(playerLoc)] +"/Music"), viewAll(home + "playCache")) # Appends local files to the listed array because I am too lazy to come up with a better solution
 
 def navify():
 	recList=[]
@@ -483,7 +485,6 @@ def Search(string, cache, name, url):
 # SUB-WINDOW LAYOUTS
 #-------------------------------------------------			    
 def AddLayout(folders):
-	# Song List
 	Search = [
 		[
 		sg.Text("Search For Song: ", expand_x=True),
@@ -527,6 +528,39 @@ def AddLayout(folders):
 		]
 	]
 	return layoutAdd
+
+def PlaylistLayout():
+	layoutPlaylist = [
+		[
+		sg.Text("Pick A PLaylist", expand_x=True)
+		],
+ 		[
+		sg.Listbox(values=[], auto_size_text=True, text_color=text, no_scrollbar=False, size=(25,10), enable_events=True,  expand_y=True, expand_x=True, key="-PPLAYLISTS-")
+		], 
+		[
+		sg.Button("Cancel", enable_events=True, mouseover_colors=hover, border_width=0, font=smallFont,key="-PCANCEL-"),
+		sg.Button("Submit", enable_events=True, mouseover_colors=hover, border_width=0,font=smallFont, key="-PSUBMIT-")
+		]	
+	]
+	return layoutPlaylist
+
+def SettingsLayout():
+	layoutSettings = [
+		[
+		sg.Slider(range=(0,150), trough_color = foreground, default_value=settings[0], enable_events=True, key="-SVOL-"),
+		sg.Listbox(values=likes, background_color=foreground, text_color=text, no_scrollbar=True, size=(25,1), enable_events=True,  expand_y=True, expand_x=True, key="-SLIKES-"),
+		sg.Listbox(values=rec, background_color=foreground,text_color=text, no_scrollbar=True, size=(25,1), enable_events=True,  expand_y=True, expand_x=True, key="-SREC-")
+		],
+		[
+		sg.Text("Volume", )
+		],
+		[
+		sg.Button("SUBMIT", button_color=foreground, mouseover_colors=hover, border_width=0,enable_events=True, key="-SSUBMIT-"),
+		sg.Button("CANCEL", button_color=foreground, mouseover_colors=hover, border_width=0,enable_events=True, key="-SCANCEL-")
+		]        
+	]
+	return layoutSettings
+
 #-------------------------------------------------
 # DEFINE SUB-WINDOWS
 #-------------------------------------------------
@@ -704,10 +738,200 @@ def Add():
 			break
 
 def Playlist():
-	pass
+	files=["---create new---"]
+	temp=next(walk(home + "playlists/"), (None, None, []))[2]
+	temp.sort()
+	songs=[]
+	selected=[]
+
+	for i in range(0,len(temp)):
+		files.append(temp[i])
+	for i in range(1,listed):
+		songs.append(listed[i][0])
+	
+	window = sg.Window(
+		"Select Playlist", 
+		PlaylistLayout(), 
+		background_color="#ccccdc", 		
+		button_color=accent,
+   		font=defaultFont,
+	   	text_justification="center", 
+		border_depth=None
+	)
+	window["-PPLAYLISTS-"].update(values=files)
+	while True:
+		event, values = window.read()
+
+		if event == "-PLAYLISTS-":
+			if values["-PLAYLISTS-"][0] == "---create new---":
+
+
+				Left = [
+					[
+					sg.Text("Songs", expand_x=True)
+					],
+					[
+					sg.Listbox(values=songs, auto_size_text=True, background_color=foreground, text_color=text, no_scrollbar=False, size=(25,10), enable_events=True,  expand_y=True, expand_x=True, key="-PSONGS2-")
+					]
+				]
+				Right = [
+					[
+					sg.Text("Selected", expand_x=True)		
+					],
+					[
+					sg.Listbox(values=selected, auto_size_text=True, background_color=foreground, text_color=text, no_scrollbar=False, size=(25,10), enable_events=True,  expand_y=True, expand_x=True, key="-PSELECTED2-")
+					]
+				]
+
+				layoutP2 = [
+					[
+					sg.Column(Left, expand_y=True, expand_x=True),
+					sg.VSeparator(color=None),
+					sg.Column(Right, expand_y=True, expand_x=True)
+					],
+					[
+					sg.Input(text_color=text, enable_events=True, size=(25,1), focus=True, border_width=0, expand_x=True, key="-PSEARCH2-"),					
+					sg.Button("CANCEL", enable_events=True, mouseover_colors=hover, border_width=0,font=smallFont, key="-PCANCEL2-"),
+					sg.Button("SUBMIT", enable_events=True, mouseover_colors=hover, border_width=0, font=smallFont,key="-PSUBMIT2-")
+					]
+				]
+				window2 = sg.Window(
+					"Create Playlist", 
+					layout2, 
+					background_color="#ccccdc", 
+					button_color=accent,
+					font=defaultFont,
+					text_justification="center",
+					border_depth=None, 
+					finalize=True
+				)
+				
+				while True:
+					event2, values2 = window2.read()
+
+					if event2 == "-PSONGS2-":
+						valid=1						
+						selected.append(str(len(selected)) + ": " + values3["-SONGS3-"][0])
+						window3["-PSELECTED2-"].update(values=selected)
+
+					if event2 == "-PSELECTED2-" and len(selected) > 0:
+						del selected[int(values3["-SELECTED3-"][0][0:1])]
+						for i in range(0,len(selected)):
+							selected[i] = str(i) + ": " + selected[i][3:]
+						window3["-PSELECTED2-"].update(values=selected)
+
+					if event2 == "-PSUBMIT2-" and len(selected) > 0:
+						layoutP3=[
+						[
+							sg.Text("Name: ", expand_x=True),
+							sg.Input(text_color=text, background_color=foreground, enable_events=True, size=(25,1), focus=True, border_width=0, expand_x=True,key="-PNAME3-"),
+							sg.Button("Create", enable_events=True, font=defaultFont,button_color=foreground, mouseover_colors=hover, border_width=0, key="-PCREATE3-")
+						]
+						]
+						window3 = sg.Window(
+							"Create Playlist",
+							layout3,
+							button_color=accent,
+							font=defaultFont,
+							text_justification="center",
+							border_depth=None,
+							finalize=True
+						)
+				
+						name=""
+						while True:
+							event3, values3 = window3.read()
+							
+							if event3 == "-PNAME3-":
+								name=values3["-PNAME3-"]
+
+							if event3 == "-PCREATE3-":
+								window3.close()
+								break
+
+						if len(name) > 0:
+							f = open(home + "playlists/" + name, 'w')
+							content=""							
+							for i in range(0, len(selected)):
+								content = content + selected[i][len(str(i))+2:] + "\n"
+							f.write(content)
+							f.close()
+							window3.close()
+							files=["---create new---"]
+							temp=next(walk(home + "playlists/"), (None, None, []))[2]
+							temp.sort()
+							for i in range(0,len(temp)):
+								files.append(temp[i])
+							window["-PPLAYLISTS-"].update(values=files)
+							break
+
+					if event2 == "-PCANCEL2-":
+						window3.close()
+						break
+
+					if event2 == "-PSEARCH2-":
+						newList=[]
+						for i in range(0, len(songs)):
+							if values2["-PSEARCH2-"].lower() in songs[i].lower():
+								newList.append(songs[i])
+						window3["-PSONGS2-"].update(values=newList)
+
+		if even2 == "-PPLAYLISTS-":
+			playlist=values["-PPLAYLISTS-"][0]
+
+		if event == "-PSUBMIT-" and len(playlist) > 0:
+			f = open(home + "playlists/" + playlist)
+			selected=[]			
+			while True:
+				line = f.readline()
+				if not line:
+					break
+				if "\n" in line:
+					line=line[0:len(line) - 1]
+				selected.append(line)
+			window2.close()
+			break
+
+		if event == "-PCANCEL-":
+			window2.close()
+			break
+	return selected
 
 def Settings():
-	pass
+	f = open(home + "settings.pkl", 'rb')
+	settings = pickle.load(f)
+	f.close()
+	f = open(home + "recommend.pkl", 'rb')
+	rec = pickle.load(f)
+	f.close()
+	
+	window = sg.Window(
+		"Settings", 
+		SettingsLayout(), 
+		background_color="#ccccdc",
+		button_color=accent,
+		font=defaultFont,
+		text_justification="center",
+		border_depth=None
+	)
+	
+	while True:
+		event, values = window.read()
+		window["-SVOL-"].bind("<ButtonRelease-1>", window2["-SVOL-"].update())
+		if event2 == "-SVOL-":
+			settings[0] = values2["-SVOL-"]
+			subprocess.Popen([home + navify.sh + " -V", str(values2["-VOL2-"])])
+        
+		if event2 == "-SSUBMIT-":
+			f = open(home + "settings.pkl", 'wb')
+			pickle.dump(settings, f)
+			f.close()
+			window.close()
+			break
+
+		if event2 == "-SCANCEL-":
+			window.close()
+			break
 
 #-------------------------------------------------
 # DEFINE MAIN WINDOW LAYOUT
@@ -915,7 +1139,7 @@ def Player():
 
 		# LOCAL SONG EVENT
 		if event == "-LOCAL-":
-			if edit==False:
+			if edit==False: # I still don't know how this works
 				if level == 0:
 					if values["-LOCAL-"][0] == localMain[1]:
 						path = home + "playCache"
@@ -965,7 +1189,7 @@ def Player():
 				else:
 
 					# Plays a song 
-					if vAll==False:
+					if vAll==False: # Especially this part. HOW?
 						if values["-LOCAL-"][0] != "[TRACKS]": 					
 							for i in range(1, len(listed)):
 								if (listed[i][0] == path + "/" + values["-LOCAL-"][0]):
