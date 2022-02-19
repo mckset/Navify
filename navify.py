@@ -457,7 +457,7 @@ def navify():
 			for x in range(0,len(fText)):
 				if " " in fText[x:x+1]:
 					fText=fText[0:x] + "+" + fText[x+1:]  
-			search(recList[i], recId[i], name, fText)
+			Search(recList[i], recId[i], name, fText)
 	
 	# Gets tracks info from cache
 	for i in range(0,len(recId)):
@@ -465,7 +465,7 @@ def navify():
 		tracksName.append(currentFile[0:43]) # Appends YouTube link
 	return tracksName
 
-def search(string, cache, name, url):       
+def Search(string, cache, name, url):       
 	req=request.Request("https://youtube.com/results?search_query=" + url, headers=header)
 	U = request.urlopen(req)
 	data = U.read().decode('utf-8')
@@ -482,83 +482,90 @@ def search(string, cache, name, url):
 #-------------------------------------------------
 # SUB-WINDOW LAYOUTS
 #-------------------------------------------------			    
-		
-# Song List
-Search = [
-	[
-	sg.Text("Search For Song: ", font=defaultFont ,justification="center", background_color=background, expand_x=True),
-	sg.Input(font=defaultFont, text_color=text, background_color=foreground, enable_events=True, size=(25,1), focus=True, border_width=0, expand_x=True,  visible=True, key="-ASEARCH-"),
-	sg.Button("Search", font=defaultFont, enable_events=True, button_color=accent, mouseover_colors=hover, border_width=0, key="-AENTER-")
+def AddLayout(folders):
+	# Song List
+	Search = [
+		[
+		sg.Text("Search For Song: ", expand_x=True),
+		sg.Input(text_color=text, background_color=foreground, enable_events=True, size=(25,1), focus=True, border_width=0, expand_x=True,  visible=True, key="-ASEARCH-"),
+		sg.Button("Search", enable_events=True, mouseover_colors=hover, border_width=0, key="-AENTER-")
+		]
 	]
-]
-Results = [
-	[
-	sg.Text("Results:", font=defaultFont, justification="center", background_color=background, expand_x=True)
-	],
-	[
-	sg.Listbox(values=[], auto_size_text=True, background_color=foreground, font=defaultFont, text_color=text, size=(25,1), no_scrollbar=True,disabled=True, enable_events=True,  expand_y=True, expand_x=True, key="-ARESULTS-")]
+	Results = [
+		[
+		sg.Text("Results:", expand_x=True)
+		],
+		[
+		sg.Listbox(values=[], auto_size_text=True, background_color=foreground, text_color=text, size=(25,1), no_scrollbar=True,disabled=True, enable_events=True,  expand_y=True, expand_x=True, key="-ARESULTS-")]
+		]
+
+	Name = [
+		[
+		sg.Text("Name: ", background_color=background, expand_x=True),
+		sg.Input(text_color=text, background_color=foreground, enable_events=True, size=(25,1), focus=True, border_width=0, expand_x=True, disabled=True, key="-ANAME-"),
+		sg.Button("Submit", enable_events=True, mouseover_colors=hover, border_width=0, key="-ASUBMIT-", disabled=True)
+		]
 	]
 
-Name = [
-	[
-	sg.Text("Name: ", font=defaultFont,justification="center", background_color=background, expand_x=True),
-	sg.Input(font=defaultFont, text_color=text, background_color=foreground, enable_events=True, size=(25,1), focus=True, border_width=0, expand_x=True, disabled=True, visible=True, key="-ANAME-"),
-	sg.Button("Submit", font=defaultFont,enable_events=True, button_color=accent, mouseover_colors=hover, border_width=0, key="-ASUBMIT-", disabled=True)
+	layoutAdd = [
+		[
+		sg.Column(Search, expand_y=True, expand_x=True) # Search
+		],
+		[
+		sg.Column(Results, expand_y=True, expand_x=True) # Results
+		],
+		[
+		sg.Column(Name, expand_y=True, expand_x=True) # Song Name
+		],
+		[
+		sg.Listbox(values=folders, auto_size_text=True, text_color=text, size=(25,1), no_scrollbar=True,disabled=False, enable_events=True,  expand_y=True, expand_x=True, key="-ACREATE-"),
+		sg.VSeparator(color=None), # Folders list
+		sg.Button("Cancel", enable_events=True, mouseover_colors=hover, border_width=0, key="-ACANCEL-"), 
+		sg.Button("Open", enable_events=True, mouseover_colors=hover, border_width=0, key="-AOPEN-", disabled=True),
+		sg.VSeparator(color=None),
+		sg.Image(source=None, size=(256,192), key="-IMAGE-") # Thumbnail
+		]
 	]
-]
-
-layoutAdd = [
-	[
-	sg.Column(Search, background_color=background, expand_y=True, expand_x=True) # Search
-	],
-	[
-	sg.Column(Results, background_color=background, expand_y=True, expand_x=True) # Results
-	],
-	[
-	sg.Column(Name, background_color=background, expand_y=True, expand_x=True) # Song Name
-	],
-	[
-	sg.Listbox(values=[], auto_size_text=True, background_color=foreground, font=defaultFont, text_color=text, size=(25,1), no_scrollbar=True,disabled=False, enable_events=True,  expand_y=True, expand_x=True, key="-ACREATE-"),
-	sg.VSeparator(color=None), # Folders list
-	sg.Button("Cancel", font=defaultFont, enable_events=True, button_color=accent, mouseover_colors=hover, border_width=0, key="-ACANCEL-"), 
-	sg.Button("Open", font=defaultFont, enable_events=True, button_color=accent, mouseover_colors=hover, border_width=0, key="-AOPEN-", disabled=True),
-	sg.VSeparator(color=None),
-	sg.Image(source=None, size=(256,192), key="-IMAGE-") # Thumbnail
-	]
-]
-
-layoutAdd2 = []		    
-			    
+	return layoutAdd
 #-------------------------------------------------
 # DEFINE SUB-WINDOWS
 #-------------------------------------------------
 
-def Add():
-	results=[]
-
+# Adds a new song to a separate cache directory 
+def Add(): 
 	temp=next(walk(home + "playCache/"), (None, None, []))[1]
 	temp.sort()
 	folders=["---create new---"]
 
 	for i in range(0,len(temp)):
 		folders.append(temp[i])
-		window = sg.Window("Add Song", layout, background_color="#ccccdc", border_depth=None)
-	search=""
-	video=[]
-	img=[]
-	links=[]
-	selected=""
-	text=[]
-	sfolder=""
+		
+	folders=AddLayout(folders)
+	window = sg.Window("Add Song", 
+			layoutAdd, 
+		  	background_color=background, 
+ 		   	button_color=accent,
+   		   	font=defaultFont,
+		   	text_justification="center",
+		   	border_depth=None
+		  	)
+	search="" # Song to search for
+	video=[] # List of found videos
+	img=[] # Thumbnails
+	links=[] # Links to each video
+	selected="" # Selected video
+	text=[] # Title of each video
+	sfolder="" # Selected folder to add the song to
 	content=""
 	name=""
+	
 	while True:
 		event, values = window.read()
 		
-		if event == "-YOUTUBESEARCH-": 
-			search=values["-YOUTUBESEARCH-"]   
+		if event == "-ASEARCH-": 
+			search=values["-ASEARCH-"]   
 
-		if event == "-ENTER-":
+		if event == "-AENTER-":
 			video=[]
 			img=[]
 			links=[]
@@ -568,6 +575,7 @@ def Add():
 			content=""
 			name=""
 			url=search
+			
 			# Retrieves the song from Youtube
 			for i in range(0,len(search)):
 				if " " in search[i:i+1]:
@@ -594,21 +602,21 @@ def Add():
 										break
 								break  
 
-			window["-RESULTS-"].update(disabled=False)
-			window["-RESULTS-"].update(values=links)
-			window["-NAME-"].update(search)
-			window["-NAME-"].update(disabled=False)
+			window["-ARESULTS-"].update(disabled=False)
+			window["-ARESULTS-"].update(values=links)
+			window["-ANAME-"].update(search)
+			window["-ANAME-"].update(disabled=False)
 			name=search
 
-		if event == "-NAME-":
-			content=values["-NAME-"]
+		if event == "-ANAME-":
+			content=values["-ANAME-"]
 
-		if event == "-RESULTS-":
-			window["-OPEN-"].update(disabled=False)
-			window["-SUBMIT-"].update(disabled=False)
-			selected=values["-RESULTS-"][0]
+		# Updates the name field to match the title and adds a thumbnail
+		if event == "-ARESULTS-":
+			window["-AOPEN-"].update(disabled=False)
+			selected=values["-ARESULTS-"][0]
 			for i in range(0,len(links)):
-				if links[i] == values["-RESULTS-"][0]:
+				if links[i] == values["-ARESULTS-"][0]:
 					response = requests.get(img[i])    
 					pil_image = Image.open(io.BytesIO(response.content))
 					png_bio = io.BytesIO()
@@ -616,74 +624,82 @@ def Add():
 					png_data = png_bio.getvalue()
 
 			response.raw.decode_content = True
-			window["-IMAGE-"].update(data=png_data, size=(256,192), subsample=2)        
-			window["-NAME-"].update(text[i])
+			window["-AIMAGE-"].update(data=png_data, size=(256,192), subsample=2)        
+			window["-ANAME-"].update(text[i])
 			name=video[i]
 			content=text[i]
 
-		if event == "-CREATE-":
-			if values["-CREATE-"][0] != "---create new---":
-				sfolder=values["-CREATE-"][0]
-		else:
-			sfolder=""
-			fname=""
-			layout2 = [
-				[
-				sg.Text("Create A New Folder ", font=defaultFont,justification="center", background_color="#ccccdc", expand_x=True)
-				],
-				[
-				sg.Text("Name: ", justification="center",font=defaultFont, background_color="#ccccdc", expand_x=True),
-				sg.Input(font=defaultFont, text_color="#ffffff", background_color="#aabbcf", enable_events=True, size=(25,1), focus=True, border_width=0, expand_x=True, disabled=False, visible=True, key="-NAME2-"),
-				sg.Button("Create", enable_events=True,font=defaultFont, button_color="#99aabf", mouseover_colors=("","#67778f"), border_width=0, key="-CREATE2-", disabled=True),
-				sg.Button("Cancel", enable_events=True, font=defaultFont,button_color="#99aabf", mouseover_colors=("","#67778f"), border_width=0, key="-CANCEL2-", disabled=False)
+		if event == "-ACREATE-":
+			if values["-ACREATE-"][0] != "---create new---":
+				sfolder=values["-ACREATE-"][0]
+			else:
+				sfolder=""
+				fname=""
+				layoutAdd2 = [
+					[
+					sg.Text("Create A New Folder ", expand_x=True)
+					],
+					[
+					sg.Text("Name: ", expand_x=True),
+					sg.Input(text_color=text, background_color=foreground, enable_events=True, size=(25,1), focus=True, border_width=0, expand_x=True, key="-NAME2-"),
+					sg.Button("Create", enable_events=True, mouseover_colors=hover, border_width=0, key="-ACREATE2-", disabled=True),
+					sg.Button("Cancel", enable_events=True, mouseover_colors=hover, border_width=0, key="-ACANCEL2-")
+					]
 				]
-			]
-			window2 = sg.Window("New Folder", layout2, background_color="#ccccdc", border_depth=None)
-			while True:
-				event2, values2 = window2.read()
+				window2 = sg.Window(
+					"New Folder", 
+					layoutAdd2,
+					background_color=background, 
+		  			button_color=accent,
+		   		   	font=defaultFont,
+				   	text_justification="center",
+					border_depth=None
+				)
+				while True:
+					event2, values2 = window2.read()
 
-				if event2 == "-CREATE2-" and len(fname) > 0:
-					subprocess.run(["mkdir", "/home/seth/.navi/navify/playCache/" + fname])
-					window2.close()
-				break
-                        
-				if event2 == "-NAME2-":
-					fname=values2["-NAME2-"]
-				if len(fname) > 0:
-					window2["-CREATE2-"].update(disabled=False)
-				else:
-					window2["-CREATE2-"].update(disabled=True)
-                        
-				if event2 == "-CANCEL2-":
-					window2.close()
+					if event2 == "-ACREATE2-" and len(fname) > 0:
+						subprocess.run(["mkdir", home + "playCache/" + fname])
+						window2.close()
 					break
-			temp=next(walk("/home/seth/.navi/navify/playCache/"), (None, None, []))[1]
-			folders=["---create new---"]
-			temp.sort()
-			for i in range(0,len(temp)):
-				folders.append(temp[i])
-			window["-CREATE-"].update(values=folders)
-            
-                
 
-		if event == "-OPEN-":
+					if event2 == "-ANAME2-":
+						fname=values2["-ANAME2-"]
+					if len(fname) > 0:
+						window2["-ACREATE2-"].update(disabled=False)
+					else:
+						window2["-ACREATE2-"].update(disabled=True)
+
+					if event2 == "-ACANCEL2-":
+						window2.close()
+						break
+				temp=next(walk(home + "playCache/"), (None, None, []))[1]
+				folders=["---create new---"]
+				temp.sort()
+				for i in range(0,len(temp)):
+					folders.append(temp[i])
+				window["-ACREATE-"].update(values=folders)
+
+
+
+		if event == "-AOPEN-":
 			subprocess.run(["gio", "open", selected])
 
 		if len(name) > 0 and len(sfolder) > 0:
-			window["-SUBMIT-"].update(disabled=False)
+			window["-ASUBMIT-"].update(disabled=False)
 		else:
-			window["-SUBMIT-"].update(disabled=True)
+			window["-ASUBMIT-"].update(disabled=True)
 
-		if event == "-SUBMIT-":
-			if not exists("/home/seth/.navi/navify/playCache/" + sfolder + "/" + name):
-				subprocess.run(["touch", "/home/seth/.navi/navify/playCache/" + sfolder + "/" + name])
-			f = open("/home/seth/.navi/navify/playCache/" + sfolder + "/" + name, 'w')
+		if event == "-ASUBMIT-":
+			if not exists(home + "playCache/" + sfolder + "/" + name):
+				subprocess.run(["touch", home + "playCache/" + sfolder + "/" + name])
+			f = open(home + "playCache/" + sfolder + "/" + name, 'w')
 			f.write(content)
 			f.close()
 			window.close()
 			break
 
-		if event == "-CANCEL-":    
+		if event == "-ACANCEL-":    
 			window.close()
 			break
 
@@ -700,52 +716,52 @@ def Settings():
 # Spotify Songs
 SongList = [
 	[
-	sg.Button(image_filename=home + "icons/search.png", enable_events=True, button_color=accent, mouseover_colors=hover, border_width=0, key="-SEARCH-"),
-	sg.Text("Songs", justification="center", background_color=background,font=defaultFont,  expand_x=True),
-	sg.Button(image_filename=home + "icons/edit.png", enable_events=True, button_color=accent, mouseover_colors=hover, border_width=0, key="-EDIT-")
+	sg.Button(image_filename=home + "icons/search.png", enable_events=True, mouseover_colors=hover, border_width=0, key="-SEARCH-"),
+	sg.Text("Songs", justification="center", expand_x=True),
+	sg.Button(image_filename=home + "icons/edit.png", enable_events=True, mouseover_colors=hover, border_width=0, key="-EDIT-")
 	],
 	[
 	sg.Listbox(values=spotList, background_color=foreground, font=defaultFont, text_color=text, no_scrollbar=True, size=(25,1), enable_events=True,  expand_y=True, expand_x=True, key="-SONGS-")], 
 	[
-	sg.Input(font=defaultFont, text_color=text, background_color=foreground, enable_events=True, size=(25,1), focus=True, border_width=0, expand_x=True, disabled=True, visible=True, key="-INSEARCH-")
+	sg.Input(text_color=text, background_color=foreground, enable_events=True, size=(25,1), focus=True, border_width=0, expand_x=True, disabled=True, key="-INSEARCH-")
 	]
 ]
 
 # Local Files
 Local = [
 	[
-	sg.Button(image_filename=home + "icons/add.png", enable_events=True, button_color=accent, mouseover_colors=hover, border_width=0, key="-ADD-"),
-	sg.Text("Local", justification="center", background_color=background, font=defaultFont, expand_x=True),
-	sg.Button(image_filename=home + "icons/playlist.png", enable_events=True, button_color=accent, mouseover_colors=hover, border_width=0, key="-PLAYLIST-")
+	sg.Button(image_filename=home + "icons/add.png", enable_events=True, mouseover_colors=hover, border_width=0, key="-ADD-"),
+	sg.Text("Local", justification="center", expand_x=True),
+	sg.Button(image_filename=home + "icons/playlist.png", enable_events=True, mouseover_colors=hover, border_width=0, key="-PLAYLIST-")
 	],
 	[
-	sg.Listbox(values=localMain, auto_size_text=True, background_color=foreground, font=defaultFont, text_color=text, no_scrollbar=True, size=(1,1), enable_events=True, expand_y=True, expand_x=True, key="-LOCAL-")
+	sg.Listbox(values=localMain, background_color=foreground, text_color=text, no_scrollbar=True, size=(1,1), enable_events=True, expand_y=True, expand_x=True, key="-LOCAL-")
 	] 
 ]
 
 # Queued Songs
 Queue = [
 	[
-	sg.Button(image_filename=home + "icons/navi.png", enable_events=True, button_color=accent, mouseover_colors=hover, border_width=0, key="-NAVIFY-"),
-	sg.Text("Queue", justification="center", background_color=background, font=defaultFont, expand_x=True),
-	sg.Button(image_filename=home + "icons/settings.png", enable_events=True, button_color=accent, mouseover_colors=hover, border_width=0, key="-SETTINGS-")
+	sg.Button(image_filename=home + "icons/navi.png", enable_events=True, mouseover_colors=hover, border_width=0, key="-NAVIFY-"),
+	sg.Text("Queue", expand_x=True),
+	sg.Button(image_filename=home + "icons/settings.png", enable_events=True, mouseover_colors=hover, border_width=0, key="-SETTINGS-")
 	],
 	[
-	sg.Listbox(values=["[CLEAR]"], auto_size_text=True, background_color=foreground, font=defaultFont, text_color=text, no_scrollbar=True, size=(1,1), enable_events=True, key="-QUEUE-", expand_y=True, expand_x=True)
+	sg.Listbox(values=["[CLEAR]"], background_color=foreground, text_color=text, no_scrollbar=True, size=(1,1), enable_events=True, key="-QUEUE-", expand_y=True, expand_x=True)
 	] 
 ]
 
 # Play Bar
 BottomBar = [
 	[
-	sg.Text(text="Now Playing: Nothing", size=(1,1), font=smallFont, expand_x=True, background_color=foreground, key="-PLAYING-"),
-	sg.Button(image_filename=home + "icons/nrepeat.png", enable_events=True, button_color=accent, mouseover_colors=hover, border_width=0, key="-REPEAT-"),
-	sg.Button(image_filename=home + "icons/blacklist.png", enable_events=True, button_color=accent, mouseover_colors=hover, border_width=0, key="-BLACKLIST-"),
-	sg.Button(image_filename=home + "icons/prev.png", enable_events=True, button_color=accent, mouseover_colors=hover, border_width=0, key="-PREV-"),
-	sg.Button(image_filename=home + "icons/play.png", enable_events=True, button_color=accent, mouseover_colors=hover, border_width=0, key="-PLAY-"),
-	sg.Button(image_filename=home + "icons/next.png", enable_events=True, button_color=accent, mouseover_colors=hover, border_width=0, key="-SKIP-"),
-	sg.Button(image_filename=home + "icons/elike.png", enable_events=True, button_color=accent, mouseover_colors=hover, border_width=0, key="-LIKE-"),
-	sg.Button(image_filename=home + "icons/nshuffle.png", enable_events=True, button_color=accent, mouseover_colors=hover, border_width=0, key="-SHUFFLE-"),
+	sg.Text(text="Now Playing: Nothing", size=(1,1), justification="left", font=smallFont, expand_x=True, background_color=foreground, key="-PLAYING-"),
+	sg.Button(image_filename=home + "icons/nrepeat.png", enable_events=True ,mouseover_colors=hover, border_width=0, key="-REPEAT-"),
+	sg.Button(image_filename=home + "icons/blacklist.png", enable_events=True, mouseover_colors=hover, border_width=0, key="-BLACKLIST-"),
+	sg.Button(image_filename=home + "icons/prev.png", enable_events=True, mouseover_colors=hover, border_width=0, key="-PREV-"),
+	sg.Button(image_filename=home + "icons/play.png", enable_events=True, mouseover_colors=hover, border_width=0, key="-PLAY-"),
+	sg.Button(image_filename=home + "icons/next.png", enable_events=True, mouseover_colors=hover, border_width=0, key="-SKIP-"),
+	sg.Button(image_filename=home + "icons/elike.png", enable_events=True, mouseover_colors=hover, border_width=0, key="-LIKE-"),
+	sg.Button(image_filename=home + "icons/nshuffle.png", enable_events=True, mouseover_colors=hover, border_width=0, key="-SHUFFLE-"),
 	sg.Text("0:00/0:00", justification="right", font=smallFont, size=(1,1), expand_x=True, background_color=foreground, key="-TIME-")    
 	]
 ]
@@ -753,22 +769,36 @@ BottomBar = [
 # Sets the Layout for the Main Window
 layout = [
 	[
-	sg.Column(Local, background_color="#ccccdc", expand_y=True, expand_x=True), # Local Songs
+	sg.Column(Local, expand_y=True, expand_x=True), # Local Songs
 	sg.VSeparator(color=None),
-	sg.Column(SongList, background_color="#ccccdc",expand_y=True, expand_x=True), # Spotify Songs
+	sg.Column(SongList, expand_y=True, expand_x=True), # Spotify Songs
 	sg.VSeparator(color=None),
-	sg.Column(Queue, background_color="#ccccdc",expand_y=True, expand_x=True) # Queued Songs
+	sg.Column(Queue, expand_y=True, expand_x=True) # Queued Songs
 	],
 	[
 	sg.Slider(range=(0,1), default_value=0, enable_events=True, background_color=foreground, trough_color=foreground, orientation='h', disable_number_display=True, border_width = 1, expand_x=True, key="-BAR-") # Progress Bar
 	],
 	[
-	sg.Column(BottomBar, background_color=background, justification="center", expand_x=True) # Play Bar
+	sg.Column(BottomBar, expand_x=True) # Play Bar
 	]
 ]
 
 # Create the window
-window = sg.Window("Navify", layout, keep_on_top=False, force_toplevel=False, no_titlebar=False, resizable=True, auto_size_text=True, use_default_focus=True, alpha_channel=0.8, background_color=background, border_depth=None)
+window = sg.Window("Navify", 
+		   layout, keep_on_top=False, 
+		   force_toplevel=False, 
+		   no_titlebar=False, 
+		   resizable=True, 
+		   auto_size_text=True, 
+		   use_default_focus=True, 
+		   alpha_channel=0.8, 
+		   background_color=background, 
+		   button_color=accent,
+		   font=defaultFont,
+		   text_justification="center",
+		   return_keyboard_events=True,
+		   border_depth=None
+		  )
 
 #-------------------------------------------------
 # MAIN LOOP
