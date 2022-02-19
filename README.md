@@ -22,7 +22,8 @@ One day I thought it would be great to integrate a Spotify player in my desktops
 **Why not have an option to stream from Spotify?**
 Though the player was supposed to only stream from Spotify, I'm too lazy to purchase a premimum membership and try. Maybe one day I will add the option. 
 
-**Potential Updates**
+Potential Updates
+-----------------
 - Support to stream from Spotify
 - Ablity to edit playlists
 - Make the Navify button not freeze the player
