@@ -684,8 +684,8 @@ def Player():
 		# Progress bar stuff
 		if isPlaying == True:
 			try:
-				duration = subprocess.Popen([home + "GUI/getTime.sh", "1"], stdout=subprocess.PIPE, text=True)
-				current = subprocess.Popen([home + "GUI/getTime.sh", "2"], stdout=subprocess.PIPE, text=True)
+				duration = subprocess.Popen([home + "navify.sh", "D"], stdout=subprocess.PIPE, text=True)
+				current = subprocess.Popen([home + "navify.sh", "C"], stdout=subprocess.PIPE, text=True)
 				duration=duration.communicate()[0][8:]
 				current=current.communicate()[0][8:]
                 
@@ -719,7 +719,7 @@ def Player():
 		# Grabbing the slider
 		if event == "-BAR-" and isPlaying==True:
 			time=200
-			subprocess.Popen([home + "GUI/setTime.sh", str(values["-BAR-"]/100)])
+			subprocess.Popen([home + "navify.sh", 'T', str(values["-BAR-"]/100)])
 
 		# Resets after the song is finished		
 		try:
