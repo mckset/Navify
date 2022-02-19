@@ -77,12 +77,14 @@ def loadSpotify():
 	try:
 		sp = spotipy.Spotify(auth_manager=SpotifyOAuth(scope=["user-library-read", "user-library-modify"]))
 	except:
-		print("Error, invalid Spotify settings.")
+		print("Error: invalid Spotify settings.\n")
+
 		if exists(home + "keys.pkl"):
 			os.remove(home + "keys.pkl")
 		spotSetup()
 
 def spotSetup():
+	global sp
 	key=[]
 	inp=""
 	while len(inp) == 0:
@@ -99,8 +101,11 @@ def spotSetup():
 	f = open(home + "keys.pkl", 'wb')
 	pickle.dump(key, f)
 	f.close()
+	os.environ['SPOTIPY_CLIENT_ID']=key[0]
+	os.environ['SPOTIPY_CLIENT_SECRET']=key[1]
+	os.environ['SPOTIPY_REDIRECT_URI']=key[2]
 	loadSpotify()
-	
+
 if exists(home + "keys.pkl"):
 	key=[]
 	f = open(home + "keys.pkl", 'rb')
@@ -130,15 +135,21 @@ def setupSettings():
 		
 def genLikes():
 	likes=[]
+	results=[]
+	x=0
 	while True: 
-		likes.append(sp.current_user_saved_tracks(20, x))
+		results.append(sp.current_user_saved_tracks(20, x))
 		x+=20
 		if (len(sp.current_user_saved_tracks(20, x)['items']) == 0):
 		    break
+	for i in range(0,len(results)):
+		for x in range(0,len(results[i]['items'])):
+			likes.append(results[i]['items'][x]['track']['id'])
+	sp.recommendations(seed_tracks=[likes[0]], limit=50) # Only to check if the user needs to input a redirect url
 	return likes
 
-setupSettings()	    
-			    
+setupSettings()	   
+likes=genLikes()		    
 #-------------------------------------------------
 # DEFINE MAIN FUNCTIONS
 #-------------------------------------------------
@@ -411,7 +422,7 @@ def navify():
 	recList=[]
 	recTrack=[]
 	recArtist=[]  
-	recID=[]
+	recId=[]
 	fText=""
 
 	# Sets up the track list used to grab recommendations
@@ -446,9 +457,9 @@ def navify():
 			fText=str(recTrack[i]) + " - " + str(recArtist[i])
 			fText = re.sub(r'[^\x00-\x7f]',r'', fText)
 			name=fText
-		for x in range(0,len(fText)):
-			if " " in fText[x:x+1]:
-				fText=fText[0:x] + "+" + fText[x+1:]            
+			for x in range(0,len(fText)):
+				if " " in fText[x:x+1]:
+					fText=fText[0:x] + "+" + fText[x+1:]  
 			search(recList[i], recId[i], name, fText)
 	
 	# Gets tracks info from cache
