@@ -30,3 +30,8 @@ Potential Updates
 - Windows support
 - Ability to edit the song, their url, and their volume in one window
 - Local search
+
+Known Issues
+------------
+- The [TRACKS] marker still shows up in folders with files even though they are not music files
+
