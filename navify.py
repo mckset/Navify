@@ -36,7 +36,7 @@ background="#ccccdc"
 foreground="#99aabf"
 accent="#99aabf"
 hover=("","#67778f")
-text="#ffffff"
+textc="#ffffff"
 alpha=0.8
 
 # PLAYER STUFF
@@ -351,8 +351,7 @@ def viewAllCondense(l1, l2):
 	for i in range(len(locTracks)):
 		listed.append([locPaths[i], locTracks[i]])
 		ID.append(locID[i])
-	
-	window["-LOCAL-"].update(values=tempList)
+
 	return tempList	
 
 def genList(): 
@@ -398,7 +397,7 @@ def genList():
 
 	# Adds "The " back into the track name
 	for i in range(len(listed)):
-		if ", The" in listed[i][0][len(listed[i])-5]:
+		if ", The".lower() in listed[i][0].lower():
 			listed[i][0] = "The " + listed[i][0][0:len(listed[i][0])-5]
 	
 	# Removes line breaks if they are at the end of the song      
@@ -415,7 +414,6 @@ def genList():
 		likes = pickle.load(f)
 		f.close()
 genList() 
-viewAllCondense(viewAll(home[0:len(home) - len(playerLoc)] +"/Music"), viewAll(home + "playCache")) # Appends local files to the listed array because I am too lazy to come up with a better solution
 
 def navify():
 	recList=[]
@@ -487,55 +485,55 @@ def Search(string, cache, name, url):
 def AddLayout(folders):
 	Search = [
 		[
-		sg.Text("Search For Song: ", expand_x=True),
-		sg.Input(text_color=text, background_color=foreground, enable_events=True, size=(25,1), focus=True, border_width=0, expand_x=True,  visible=True, key="-ASEARCH-"),
+		sg.Text("Search For Song: ", background_color=background, expand_x=True),
+		sg.Input(text_color=textc, background_color=foreground, enable_events=True, size=(25,1), focus=True, border_width=0, expand_x=True,  visible=True, key="-ASEARCH-"),
 		sg.Button("Search", enable_events=True, mouseover_colors=hover, border_width=0, key="-AENTER-")
 		]
 	]
 	Results = [
 		[
-		sg.Text("Results:", expand_x=True)
+		sg.Text("Results:", background_color=background, expand_x=True)
 		],
 		[
-		sg.Listbox(values=[], auto_size_text=True, background_color=foreground, text_color=text, size=(25,1), no_scrollbar=True,disabled=True, enable_events=True,  expand_y=True, expand_x=True, key="-ARESULTS-")]
+		sg.Listbox(values=[], auto_size_text=True, background_color=foreground, text_color=textc, size=(25,1), no_scrollbar=True,disabled=True, enable_events=True,  expand_y=True, expand_x=True, key="-ARESULTS-")]
 		]
 
 	Name = [
 		[
 		sg.Text("Name: ", background_color=background, expand_x=True),
-		sg.Input(text_color=text, background_color=foreground, enable_events=True, size=(25,1), focus=True, border_width=0, expand_x=True, disabled=True, key="-ANAME-"),
+		sg.Input(text_color=textc, background_color=foreground, enable_events=True, size=(25,1), focus=True, border_width=0, expand_x=True, disabled=True, key="-ANAME-"),
 		sg.Button("Submit", enable_events=True, mouseover_colors=hover, border_width=0, key="-ASUBMIT-", disabled=True)
 		]
 	]
 
 	layoutAdd = [
 		[
-		sg.Column(Search, expand_y=True, expand_x=True) # Search
+		sg.Column(Search, expand_y=True, background_color=background,expand_x=True) # Search
 		],
 		[
-		sg.Column(Results, expand_y=True, expand_x=True) # Results
+		sg.Column(Results, expand_y=True, background_color=background,expand_x=True) # Results
 		],
 		[
-		sg.Column(Name, expand_y=True, expand_x=True) # Song Name
+		sg.Column(Name, expand_y=True, background_color=background,expand_x=True) # Song Name
 		],
 		[
-		sg.Listbox(values=folders, auto_size_text=True, text_color=text, size=(25,1), no_scrollbar=True,disabled=False, enable_events=True,  expand_y=True, expand_x=True, key="-ACREATE-"),
+		sg.Listbox(values=folders, background_color=foreground,auto_size_text=True, text_color=textc, size=(25,1), no_scrollbar=True,disabled=False, enable_events=True,  expand_y=True, expand_x=True, key="-ACREATE-"),
 		sg.VSeparator(color=None), # Folders list
 		sg.Button("Cancel", enable_events=True, mouseover_colors=hover, border_width=0, key="-ACANCEL-"), 
 		sg.Button("Open", enable_events=True, mouseover_colors=hover, border_width=0, key="-AOPEN-", disabled=True),
 		sg.VSeparator(color=None),
-		sg.Image(source=None, size=(256,192), key="-IMAGE-") # Thumbnail
+		sg.Image(source=None, background_color=background,size=(256,192), key="-AIMAGE-") # Thumbnail
 		]
 	]
 	return layoutAdd
 
-def PlaylistLayout():
+def PlaylistLayout(files):
 	layoutPlaylist = [
 		[
-		sg.Text("Pick A PLaylist", expand_x=True)
+		sg.Text("Pick A PLaylist",background_color=background, expand_x=True)
 		],
  		[
-		sg.Listbox(values=[], auto_size_text=True, text_color=text, no_scrollbar=False, size=(25,10), enable_events=True,  expand_y=True, expand_x=True, key="-PPLAYLISTS-")
+		sg.Listbox(values=files, background_color=foreground, auto_size_text=True, text_color=textc, no_scrollbar=False, size=(25,10), enable_events=True,  expand_y=True, expand_x=True, key="-PPLAYLISTS-")
 		], 
 		[
 		sg.Button("Cancel", enable_events=True, mouseover_colors=hover, border_width=0, font=smallFont,key="-PCANCEL-"),
@@ -544,15 +542,15 @@ def PlaylistLayout():
 	]
 	return layoutPlaylist
 
-def SettingsLayout():
+def SettingsLayout(settings, rec):
 	layoutSettings = [
 		[
-		sg.Slider(range=(0,150), trough_color = foreground, default_value=settings[0], enable_events=True, key="-SVOL-"),
-		sg.Listbox(values=likes, background_color=foreground, text_color=text, no_scrollbar=True, size=(25,1), enable_events=True,  expand_y=True, expand_x=True, key="-SLIKES-"),
-		sg.Listbox(values=rec, background_color=foreground,text_color=text, no_scrollbar=True, size=(25,1), enable_events=True,  expand_y=True, expand_x=True, key="-SREC-")
+		sg.Slider(range=(0,150), background_color=background,trough_color = foreground, default_value=settings[0], enable_events=True, key="-SVOL-"),
+		sg.Listbox(values=likes, background_color=foreground, text_color=textc, no_scrollbar=True, size=(25,1), enable_events=True,  expand_y=True, expand_x=True, key="-SLIKES-"),
+		sg.Listbox(values=rec, background_color=foreground,text_color=textc, no_scrollbar=True, size=(25,1), enable_events=True,  expand_y=True, expand_x=True, key="-SREC-")
 		],
 		[
-		sg.Text("Volume", )
+		sg.Text("Volume", background_color=background)
 		],
 		[
 		sg.Button("SUBMIT", button_color=foreground, mouseover_colors=hover, border_width=0,enable_events=True, key="-SSUBMIT-"),
@@ -573,10 +571,10 @@ def Add():
 
 	for i in range(0,len(temp)):
 		folders.append(temp[i])
-		
-	folders=AddLayout(folders)
-	window = sg.Window("Add Song", 
-			layoutAdd, 
+
+	window = sg.Window(
+			"Add Song", 
+			AddLayout(folders), 
 		  	background_color=background, 
  		   	button_color=accent,
    		   	font=defaultFont,
@@ -656,12 +654,11 @@ def Add():
 					png_bio = io.BytesIO()
 					pil_image.save(png_bio, format="PNG")
 					png_data = png_bio.getvalue()
-
-			response.raw.decode_content = True
-			window["-AIMAGE-"].update(data=png_data, size=(256,192), subsample=2)        
-			window["-ANAME-"].update(text[i])
-			name=video[i]
-			content=text[i]
+					response.raw.decode_content = True
+					window["-AIMAGE-"].update(data=png_data, size=(256,192), subsample=2)        
+					window["-ANAME-"].update(text[i])
+					name=video[i]
+					content=text[i]
 
 		if event == "-ACREATE-":
 			if values["-ACREATE-"][0] != "---create new---":
@@ -671,15 +668,16 @@ def Add():
 				fname=""
 				layoutAdd2 = [
 					[
-					sg.Text("Create A New Folder ", expand_x=True)
+					sg.Text("Create A New Folder ", background_color=background, expand_x=True)
 					],
 					[
-					sg.Text("Name: ", expand_x=True),
-					sg.Input(text_color=text, background_color=foreground, enable_events=True, size=(25,1), focus=True, border_width=0, expand_x=True, key="-NAME2-"),
+					sg.Text("Name: ", background_color=background, expand_x=True),
+					sg.Input(text_color=textc, background_color=foreground, enable_events=True, size=(25,1), focus=True, border_width=0, expand_x=True, key="-ANAME2-"),
 					sg.Button("Create", enable_events=True, mouseover_colors=hover, border_width=0, key="-ACREATE2-", disabled=True),
 					sg.Button("Cancel", enable_events=True, mouseover_colors=hover, border_width=0, key="-ACANCEL2-")
 					]
 				]
+
 				window2 = sg.Window(
 					"New Folder", 
 					layoutAdd2,
@@ -689,18 +687,19 @@ def Add():
 				   	text_justification="center",
 					border_depth=None
 				)
+				print("bruh")
 				while True:
 					event2, values2 = window2.read()
 
 					if event2 == "-ACREATE2-" and len(fname) > 0:
 						subprocess.run(["mkdir", home + "playCache/" + fname])
 						window2.close()
-					break
+						break
 
 					if event2 == "-ANAME2-":
 						fname=values2["-ANAME2-"]
-					if len(fname) > 0:
-						window2["-ACREATE2-"].update(disabled=False)
+						if len(fname) > 0:
+							window2["-ACREATE2-"].update(disabled=False)
 					else:
 						window2["-ACREATE2-"].update(disabled=True)
 
@@ -736,6 +735,7 @@ def Add():
 		if event == "-ACANCEL-":    
 			window.close()
 			break
+	return []
 
 def Playlist():
 	files=["---create new---"]
@@ -746,59 +746,58 @@ def Playlist():
 
 	for i in range(0,len(temp)):
 		files.append(temp[i])
-	for i in range(1,listed):
+	for i in range(1,len(listed)):
 		songs.append(listed[i][0])
 	
 	window = sg.Window(
 		"Select Playlist", 
-		PlaylistLayout(), 
+		PlaylistLayout(files), 
 		background_color="#ccccdc", 		
 		button_color=accent,
    		font=defaultFont,
 	   	text_justification="center", 
 		border_depth=None
 	)
-	window["-PPLAYLISTS-"].update(values=files)
 	while True:
 		event, values = window.read()
 
-		if event == "-PLAYLISTS-":
-			if values["-PLAYLISTS-"][0] == "---create new---":
+		if event == "-PPLAYLISTS-":
+			if values["-PPLAYLISTS-"][0] == "---create new---":
 
 
 				Left = [
 					[
-					sg.Text("Songs", expand_x=True)
+					sg.Text("Songs", background_color=background,expand_x=True)
 					],
 					[
-					sg.Listbox(values=songs, auto_size_text=True, background_color=foreground, text_color=text, no_scrollbar=False, size=(25,10), enable_events=True,  expand_y=True, expand_x=True, key="-PSONGS2-")
+					sg.Listbox(values=songs, auto_size_text=True, background_color=foreground, text_color=textc, no_scrollbar=False, size=(25,10), enable_events=True,  expand_y=True, expand_x=True, key="-PSONGS2-")
 					]
 				]
 				Right = [
 					[
-					sg.Text("Selected", expand_x=True)		
+					sg.Text("Selected", background_color=background,expand_x=True)		
 					],
 					[
-					sg.Listbox(values=selected, auto_size_text=True, background_color=foreground, text_color=text, no_scrollbar=False, size=(25,10), enable_events=True,  expand_y=True, expand_x=True, key="-PSELECTED2-")
+					sg.Listbox(values=selected, auto_size_text=True, background_color=foreground, text_color=textc, no_scrollbar=False, size=(25,10), enable_events=True,  expand_y=True, expand_x=True, key="-PSELECTED2-")
 					]
 				]
 
 				layoutP2 = [
 					[
-					sg.Column(Left, expand_y=True, expand_x=True),
+					sg.Column(Left, expand_y=True, background_color=background,expand_x=True),
 					sg.VSeparator(color=None),
-					sg.Column(Right, expand_y=True, expand_x=True)
+					sg.Column(Right, expand_y=True, background_color=background,expand_x=True)
 					],
 					[
-					sg.Input(text_color=text, enable_events=True, size=(25,1), focus=True, border_width=0, expand_x=True, key="-PSEARCH2-"),					
+					sg.Input(text_color=textc, background_color=foreground, enable_events=True, size=(25,1), focus=True, border_width=0, expand_x=True, key="-PSEARCH2-"),					
 					sg.Button("CANCEL", enable_events=True, mouseover_colors=hover, border_width=0,font=smallFont, key="-PCANCEL2-"),
 					sg.Button("SUBMIT", enable_events=True, mouseover_colors=hover, border_width=0, font=smallFont,key="-PSUBMIT2-")
 					]
 				]
 				window2 = sg.Window(
 					"Create Playlist", 
-					layout2, 
-					background_color="#ccccdc", 
+					layoutP2, 
+					background_color=background, 
 					button_color=accent,
 					font=defaultFont,
 					text_justification="center",
@@ -811,26 +810,26 @@ def Playlist():
 
 					if event2 == "-PSONGS2-":
 						valid=1						
-						selected.append(str(len(selected)) + ": " + values3["-SONGS3-"][0])
-						window3["-PSELECTED2-"].update(values=selected)
+						selected.append(str(len(selected)) + ": " + values2["-PSONGS2-"][0])
+						window2["-PSELECTED2-"].update(values=selected)
 
 					if event2 == "-PSELECTED2-" and len(selected) > 0:
-						del selected[int(values3["-SELECTED3-"][0][0:1])]
+						del selected[int(values2["-PSELECTED2-"][0][0:1])]
 						for i in range(0,len(selected)):
 							selected[i] = str(i) + ": " + selected[i][3:]
-						window3["-PSELECTED2-"].update(values=selected)
+						window2["-PSELECTED2-"].update(values=selected)
 
 					if event2 == "-PSUBMIT2-" and len(selected) > 0:
 						layoutP3=[
 						[
 							sg.Text("Name: ", expand_x=True),
-							sg.Input(text_color=text, background_color=foreground, enable_events=True, size=(25,1), focus=True, border_width=0, expand_x=True,key="-PNAME3-"),
+							sg.Input(text_color=textc, background_color=foreground, enable_events=True, size=(25,1), focus=True, border_width=0, expand_x=True,key="-PNAME3-"),
 							sg.Button("Create", enable_events=True, font=defaultFont,button_color=foreground, mouseover_colors=hover, border_width=0, key="-PCREATE3-")
 						]
 						]
 						window3 = sg.Window(
 							"Create Playlist",
-							layout3,
+							layoutP3,
 							button_color=accent,
 							font=defaultFont,
 							text_justification="center",
@@ -863,10 +862,11 @@ def Playlist():
 							for i in range(0,len(temp)):
 								files.append(temp[i])
 							window["-PPLAYLISTS-"].update(values=files)
+							window2.close()
 							break
 
 					if event2 == "-PCANCEL2-":
-						window3.close()
+						window2.close()
 						break
 
 					if event2 == "-PSEARCH2-":
@@ -874,9 +874,9 @@ def Playlist():
 						for i in range(0, len(songs)):
 							if values2["-PSEARCH2-"].lower() in songs[i].lower():
 								newList.append(songs[i])
-						window3["-PSONGS2-"].update(values=newList)
+						window2["-PSONGS2-"].update(values=newList)
 
-		if even2 == "-PPLAYLISTS-":
+		if event == "-PPLAYLISTS-":
 			playlist=values["-PPLAYLISTS-"][0]
 
 		if event == "-PSUBMIT-" and len(playlist) > 0:
@@ -889,11 +889,11 @@ def Playlist():
 				if "\n" in line:
 					line=line[0:len(line) - 1]
 				selected.append(line)
-			window2.close()
+			window.close()
 			break
 
 		if event == "-PCANCEL-":
-			window2.close()
+			window.close()
 			break
 	return selected
 
@@ -901,13 +901,23 @@ def Settings():
 	f = open(home + "settings.pkl", 'rb')
 	settings = pickle.load(f)
 	f.close()
-	f = open(home + "recommend.pkl", 'rb')
-	rec = pickle.load(f)
-	f.close()
-	
+	x=0
+	rec=[]
+	results=[]
+
+	while True: 
+		results.append(sp.current_user_saved_tracks(20, x))
+		x+=20
+		if (len(sp.current_user_saved_tracks(20, x)['items']) == 0):
+			break
+
+	for i in range(0, len(results)):
+		for idx, item in enumerate(results[i]['items']):
+			rec.append(item['track']['name'] + " - " + item['track']['artists'][0]['name'])
+             
 	window = sg.Window(
 		"Settings", 
-		SettingsLayout(), 
+		SettingsLayout(settings, rec), 
 		background_color="#ccccdc",
 		button_color=accent,
 		font=defaultFont,
@@ -917,19 +927,22 @@ def Settings():
 	
 	while True:
 		event, values = window.read()
-		window["-SVOL-"].bind("<ButtonRelease-1>", window2["-SVOL-"].update())
-		if event2 == "-SVOL-":
-			settings[0] = values2["-SVOL-"]
-			subprocess.Popen([home + navify.sh + " -V", str(values2["-VOL2-"])])
-        
-		if event2 == "-SSUBMIT-":
+		window["-SVOL-"].bind("<ButtonRelease-1>", window["-SVOL-"].update())
+		if event == "-SVOL-":
+			settings[0] = values["-SVOL-"]
+			try:
+				subprocess.check_output(('socat', '-', '/tmp/mpvsocket'), stdin=subprocess.Popen(('echo', '{"command": ["set_property", "volume", '+ str(values["-SVOL-"]) +']}'), stdout=subprocess.PIPE).stdout)
+			except:
+				print("MPV is not running")
+
+		if event == "-SSUBMIT-":
 			f = open(home + "settings.pkl", 'wb')
 			pickle.dump(settings, f)
 			f.close()
 			window.close()
 			break
 
-		if event2 == "-SCANCEL-":
+		if event == "-SCANCEL-":
 			window.close()
 			break
 
@@ -941,13 +954,13 @@ def Settings():
 SongList = [
 	[
 	sg.Button(image_filename=home + "icons/search.png", enable_events=True, mouseover_colors=hover, border_width=0, key="-SEARCH-"),
-	sg.Text("Songs", justification="center", expand_x=True),
+	sg.Text("Songs", background_color=background,  expand_x=True),
 	sg.Button(image_filename=home + "icons/edit.png", enable_events=True, mouseover_colors=hover, border_width=0, key="-EDIT-")
 	],
 	[
-	sg.Listbox(values=spotList, background_color=foreground, font=defaultFont, text_color=text, no_scrollbar=True, size=(25,1), enable_events=True,  expand_y=True, expand_x=True, key="-SONGS-")], 
+	sg.Listbox(values=spotList, background_color=foreground, font=defaultFont, text_color=textc, no_scrollbar=True, size=(25,1), enable_events=True,  expand_y=True, expand_x=True, key="-SONGS-")], 
 	[
-	sg.Input(text_color=text, background_color=foreground, enable_events=True, size=(25,1), focus=True, border_width=0, expand_x=True, disabled=True, key="-INSEARCH-")
+	sg.Input(text_color=textc, background_color=foreground, enable_events=True, size=(25,1), focus=True, border_width=0, expand_x=True, disabled=True, key="-INSEARCH-")
 	]
 ]
 
@@ -955,11 +968,11 @@ SongList = [
 Local = [
 	[
 	sg.Button(image_filename=home + "icons/add.png", enable_events=True, mouseover_colors=hover, border_width=0, key="-ADD-"),
-	sg.Text("Local", justification="center", expand_x=True),
+	sg.Text("Local", background_color=background, expand_x=True),
 	sg.Button(image_filename=home + "icons/playlist.png", enable_events=True, mouseover_colors=hover, border_width=0, key="-PLAYLIST-")
 	],
 	[
-	sg.Listbox(values=localMain, background_color=foreground, text_color=text, no_scrollbar=True, size=(1,1), enable_events=True, expand_y=True, expand_x=True, key="-LOCAL-")
+	sg.Listbox(values=localMain, background_color=foreground, text_color=textc, no_scrollbar=True, size=(1,1), enable_events=True, expand_y=True, expand_x=True, key="-LOCAL-")
 	] 
 ]
 
@@ -967,11 +980,11 @@ Local = [
 Queue = [
 	[
 	sg.Button(image_filename=home + "icons/navi.png", enable_events=True, mouseover_colors=hover, border_width=0, key="-NAVIFY-"),
-	sg.Text("Queue", expand_x=True),
+	sg.Text("Queue",background_color=background,  expand_x=True),
 	sg.Button(image_filename=home + "icons/settings.png", enable_events=True, mouseover_colors=hover, border_width=0, key="-SETTINGS-")
 	],
 	[
-	sg.Listbox(values=["[CLEAR]"], background_color=foreground, text_color=text, no_scrollbar=True, size=(1,1), enable_events=True, key="-QUEUE-", expand_y=True, expand_x=True)
+	sg.Listbox(values=["[CLEAR]"], background_color=foreground, text_color=textc, no_scrollbar=True, size=(1,1), enable_events=True, key="-QUEUE-", expand_y=True, expand_x=True)
 	] 
 ]
 
@@ -993,17 +1006,17 @@ BottomBar = [
 # Sets the Layout for the Main Window
 layout = [
 	[
-	sg.Column(Local, expand_y=True, expand_x=True), # Local Songs
+	sg.Column(Local, expand_y=True,background_color=background,  expand_x=True), # Local Songs
 	sg.VSeparator(color=None),
-	sg.Column(SongList, expand_y=True, expand_x=True), # Spotify Songs
+	sg.Column(SongList, expand_y=True,background_color=background,  expand_x=True), # Spotify Songs
 	sg.VSeparator(color=None),
-	sg.Column(Queue, expand_y=True, expand_x=True) # Queued Songs
+	sg.Column(Queue, expand_y=True, background_color=background, expand_x=True) # Queued Songs
 	],
 	[
 	sg.Slider(range=(0,1), default_value=0, enable_events=True, background_color=foreground, trough_color=foreground, orientation='h', disable_number_display=True, border_width = 1, expand_x=True, key="-BAR-") # Progress Bar
 	],
 	[
-	sg.Column(BottomBar, expand_x=True) # Play Bar
+	sg.Column(BottomBar, background_color=background, expand_x=True) # Play Bar
 	]
 ]
 
@@ -1079,19 +1092,18 @@ def Player():
 		# Progress bar stuff
 		if isPlaying == True:
 			try:
-				duration = subprocess.Popen([home + "navify.sh", "D"], stdout=subprocess.PIPE, text=True)
-				current = subprocess.Popen([home + "navify.sh", "C"], stdout=subprocess.PIPE, text=True)
-				duration=duration.communicate()[0][8:]
-				current=current.communicate()[0][8:]
-                
-				for i in range(0, len(duration)):
-					if duration[i:i+1] == ",":
-						duration=float(duration[0:i])
+				duration = subprocess.check_output(('socat', '-', '/tmp/mpvsocket'), stdin=subprocess.Popen(('echo', '{ "command": ["get_property", "duration"] }'), stdout=subprocess.PIPE).stdout, text=True)
+				for i in range(len(duration[8:])):
+					if duration[i:i+1] == ',':
+						duration=float(duration[8:i])
 						break
-				for i in range(0, len(current)):
-					if current[i:i+1] == ",":
-						current=float(current[0:i])
+
+				current = subprocess.check_output(('socat', '-', '/tmp/mpvsocket'), stdin=subprocess.Popen(('echo', '{ "command": ["get_property", "playback-time"] }'), stdout=subprocess.PIPE).stdout, text=True)
+				for i in range(len(current[8:])):
+					if current[i:i+1] == ',':
+						current=float(current[8:i])
 						break
+
 				if time == 0:
 					window["-BAR-"].update(current*100, range=(0,duration*100))
 				min = int(current/60)
@@ -1114,7 +1126,7 @@ def Player():
 		# Grabbing the slider
 		if event == "-BAR-" and isPlaying==True:
 			time=200
-			subprocess.Popen([home + "navify.sh", 'T', str(values["-BAR-"]/100)])
+			subprocess.check_output(('socat', '-', '/tmp/mpvsocket'), stdin=subprocess.Popen(('echo', '{ "command": ["set_property", "playback-time", ' + str(values["-BAR-"]/100) + '] }'), stdout=subprocess.PIPE).stdout, text=True)
 
 		# Resets after the song is finished		
 		try:
@@ -1155,6 +1167,7 @@ def Player():
 						vAll=True
 						path="all"
 						locTracks = viewAllCondense(viewAll(home[0:len(home) - len(playerLoc)] +"/Music"), viewAll(home + "playCache"))
+						window["-LOCAL-"].update(values=locTracks)
 					level=level+1	
 			
 				# Goes up one level 
@@ -1174,8 +1187,10 @@ def Player():
 				if values["-LOCAL-"][0] == "[ALL]" and level == 1:				
 					if isCache==False:
 						locTracks = viewAllCondense(viewAll(home[0:len(home) - len(playerLoc)] +"/Music"), [])
+						window["-LOCAL-"].update(values=locTracks)
 					else:
 						locTracks = viewAllCondense([], viewAll(home + "playCache"))	
+						window["-LOCAL-"].update(values=locTracks)
 					path=path+"/ "
 					vAll=True			
 					level=level+1	
@@ -1317,9 +1332,9 @@ def Player():
 
 		# Add song event
 		if event == "-ADD-":
-			add()
+			Add()
 			genList()
-			window["-LOCAL-"].update(values=folders)
+			window["-LOCAL-"].update(values=localMain)
             
 		# Repeat
 		if event == "-REPEAT-":
@@ -1441,7 +1456,7 @@ def Player():
 		# PLAYLIST BUTTON EVENT
 		if event == "-PLAYLIST-":
 			temp=[]
-			temp=playlist(spotList, localList)
+			temp=Playlist()
 			for i in range(len(temp)):
 				queue.append(temp[i])
 			window["-QUEUE-"].update(values=queue)
@@ -1474,7 +1489,7 @@ def Player():
 
 		# SETTINGS        
 		if event == "-SETTINGS-":
-			settings.main()
+			Settings()
 
 		# PLAYALL
 		if event == "-LAYALL-":
@@ -1537,6 +1552,7 @@ def Listener():
 	pickle.dump(info, f)
 	f.close()
 
+viewAllCondense(viewAll(home[0:len(home) - len(playerLoc)] +"/Music"), viewAll(home + "playCache")) # Appends local files to the listed array because I am too lazy to come up with a better solution
 Player()
 
 #-------------------------------------------------
