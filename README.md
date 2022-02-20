@@ -27,6 +27,7 @@ Potential Updates
 - Local search
 - Ability to add new paths to the local songs section
 - More settings
+- Ability to edit local songs
 
 Known Issues
 ------------
