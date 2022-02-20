@@ -36,6 +36,7 @@ smallFont="Inter 32"
 background="#ccccdc"
 foreground="#99aabf"
 accent="#99aabf"
+highlight="#bbccdf"
 hover=("","#67778f")
 textc="#ffffff"
 alpha=0.8
@@ -57,12 +58,6 @@ localMain=["ALL", "LOCAL CACHE","MUSIC"] # The Main Screen for the Local Section
 # NAVIFY STUFF
 header={'User-Agent' : 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:23.0) Gecko/20100101 Forefox/23.0'}
 sp=""
-
-
-# SPOTIFY STUFF
-#481da7d376c747408b5ec25f609c193b
-#4ec619360c6e497a9ce1f126a3c10f93
-#http://localhost
 		
 # LOCAL SERVER STUFF
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -74,16 +69,16 @@ s.bind(('', port))
 # SETUP FUNCTIONS
 #-------------------------------------------------
 
-def loadSpotify():
+def LoadSpotify():
 	global sp
 	try:
 		sp = spotipy.Spotify(auth_manager=SpotifyOAuth(scope=["user-library-read", "user-library-modify"]))
 		sp.current_user_saved_tracks(1, 1) # Attempts to gets the first liked song to let the program if the user needs to input a redirect like
 	except:
 		print("Error: invalid Spotify settings.\n")
-		spotSetup()
+		SpotSetup()
 
-def spotSetup():
+def SpotSetup():
 	global sp
 	key=[]
 	inp=""
@@ -104,7 +99,7 @@ def spotSetup():
 	os.environ['SPOTIPY_CLIENT_ID']=key[0]
 	os.environ['SPOTIPY_CLIENT_SECRET']=key[1]
 	os.environ['SPOTIPY_REDIRECT_URI']=key[2]
-	loadSpotify()
+	LoadSpotify()
 
 if exists(home + "keys.pkl"):
 	key=[]
@@ -114,12 +109,12 @@ if exists(home + "keys.pkl"):
 	os.environ['SPOTIPY_CLIENT_ID']=key[0]
 	os.environ['SPOTIPY_CLIENT_SECRET']=key[1]
 	os.environ['SPOTIPY_REDIRECT_URI']=key[2]
-	loadSpotify()
+	LoadSpotify()
 else:
-	spotSetup()
+	SpotSetup()
 		
 # Initializes setting files
-def setupSettings():
+def SetupSettings():
 	if not exists(home + "info.pkl"):
 		f = open(home + "info.pkl", 'wb')
 		pickle.dump(["","","",""])
@@ -133,7 +128,7 @@ def setupSettings():
 		pickle.dump(genLikes()[0:5])
 		f.close()		
 		
-def genLikes():
+def GenLikes():
 	likes=[]
 	results=[]
 	x=0
@@ -147,8 +142,8 @@ def genLikes():
 			likes.append(results[i]['items'][x]['track']['id'])
 	return likes
 
-setupSettings()	   
-likes=genLikes()		    
+SetupSettings()	   
+likes=GenLikes()		    
 #-------------------------------------------------
 # DEFINE MAIN FUNCTIONS
 #-------------------------------------------------
@@ -167,7 +162,7 @@ def Play(x, finished):
 	subprocess.run(["mpv","--no-video", "--input-ipc-server=/tmp/mpvsocket", "--volume=" + str(vol), track])
 	finished.put(True)
 
-def playAll(select, isCache):
+def PlayAll(select, isCache):
 	tracks=next(walk(select), (None, None, []))[2]
 	tempName=[]
 	tracks.sort()
@@ -185,7 +180,7 @@ def playAll(select, isCache):
 	return tempName
 
 
-def upDesktop(x, alt):
+def UpDesktop(x, alt):
 	global currentTrack
 
 	# Dumps the info so the desktop can read it
@@ -223,7 +218,7 @@ def upDesktop(x, alt):
 		pickle.dump(info, f)
 		f.close()
 
-def updateLocal(select, isCache):
+def UpLocal(select, isCache):
 	newList=["..."]    
 
 	if select == home + "playCache" or select == home[0:len(home) - len(playerLoc)] +"/Music":
@@ -269,7 +264,7 @@ def updateLocal(select, isCache):
 	window["-LOCAL-"].update(values=newList)
 	
 
-def viewAll(path): 
+def ViewAll(path): 
 	listOfFile = os.listdir(path)
 	allFiles = list()
 	for entry in listOfFile:
@@ -280,7 +275,7 @@ def viewAll(path):
 			allFiles.append(fullPath)
 	return allFiles           
 	
-def viewAllCondense(l1, l2):
+def ViewAllCondense(l1, l2):
 	global listed 
 	global ID
 	global locPaths
@@ -360,7 +355,19 @@ def viewAllCondense(l1, l2):
 
 	return tempList	
 
-def genList(): 
+def KillMPV():
+	mpv = subprocess.check_output('grep', "'input-ipc-server'"), stdin=subprocess.Popen(('ps', 'aux'), stdout=subprocess.PIPE).stdout, text=True).communicate()[0][4:]
+	for i in range(0,len(mpv)):
+	    if not " " in mpv[i:i+1]:
+		mpv=mpv[i:]
+		break
+	for i in range(0, len(mpv)):
+	    if " " in mpv[i:i+1]:
+		mpv=mpv[0:i]
+		break
+	subprocess.run(["kill", mpv]) 
+	
+def GenList(): 
 	global spotList
 	global ID
 	global listed
@@ -419,7 +426,7 @@ def genList():
 		f = open(home + 'icons/likes.pkl', 'rb')
 		likes = pickle.load(f)
 		f.close()
-genList() 
+GenList() 
 
 def Navify(tempQ):
 	recList=[] 
@@ -1136,17 +1143,17 @@ def Player():
 					if values["-LOCAL-"][0] == localMain[1]:
 						path = home + "playCache"
 						isCache=True
-						updateLocal(path, isCache)
+						UpLocal(path, isCache)
 
 					elif values["-LOCAL-"][0] == localMain[2] and level == 0:
 						path = home[0:len(home) - len(playerLoc)] +"/Music"
 						isCache=False
-						updateLocal(path, isCache)
+						UpLocal(path, isCache)
 
 					else:
 						vAll=True
 						path="all"
-						locTracks = viewAllCondense(viewAll(home[0:len(home) - len(playerLoc)] +"/Music"), viewAll(home + "playCache"))
+						locTracks = ViewAllCondense(ViewAll(home[0:len(home) - len(playerLoc)] +"/Music"), ViewAll(home + "playCache"))
 						window["-LOCAL-"].update(values=locTracks)
 					level=level+1	
 			
@@ -1161,15 +1168,15 @@ def Player():
 							if "/" in path[i:i+1]:
 								x=i
 						path=path[0:x]
-						updateLocal(path, isCache)
+						UpLocal(path, isCache)
 					vAll=False
 				
 				if values["-LOCAL-"][0] == "[ALL]" and level == 1:				
 					if isCache==False:
-						locTracks = viewAllCondense(viewAll(home[0:len(home) - len(playerLoc)] +"/Music"), [])
+						locTracks = ViewAllCondense(ViewAll(home[0:len(home) - len(playerLoc)] +"/Music"), [])
 						window["-LOCAL-"].update(values=locTracks)
 					else:
-						locTracks = viewAllCondense([], viewAll(home + "playCache"))	
+						locTracks = ViewAllCondense([], ViewAll(home + "playCache"))	
 						window["-LOCAL-"].update(values=locTracks)
 					path=path+"/ "
 					vAll=True			
@@ -1178,7 +1185,7 @@ def Player():
 				# Opens folders
 				if os.path.isdir(path + "/" + values["-LOCAL-"][0]) and level != 0:
 					path = path + "/" + values["-LOCAL-"][0]				
-					updateLocal(path, isCache)
+					UpLocal(path, isCache)
 					level = level + 1
 
 				else:
@@ -1195,7 +1202,7 @@ def Player():
 									break
 						else:
 							tempName=[]
-							tempName=playAll(path, isCache)
+							tempName=PlayAll(path, isCache)
 							for i in range(len(tempName)):					
 								queue.append(tempName[i])
 								if repeat == 1:
@@ -1279,7 +1286,7 @@ def Player():
 		# Append Navify to queue
 		if navify==True:
 			if len(pNa.put(tempQ)) > 0:
-				genList()
+				GenList()
 				window["-SONGS-"].update(values=spotList)
 				for i in range(len(tempList)):
 					for x in range(len(ID)):
@@ -1326,7 +1333,7 @@ def Player():
 					valid=1
 					if skip==False:
 						window["-PLAYING-"].update("Now Playing: " + listed[i][0])
-					upDesktop(i, tname)
+					UpDesktop(i, tname)
 					finished = Process.Queue(False)
 					p = Process(target=Play, args=(i, finished, ), daemon=True)
 					p.start()
@@ -1344,7 +1351,7 @@ def Player():
 		# Add song event
 		if event == "-ADD-":
 			Add()
-			genList()
+			GenList()
 			window["-LOCAL-"].update(values=localMain)
             
 		# Repeat
@@ -1372,7 +1379,7 @@ def Player():
 		# BLACKLIST
 		if event == "-BLACKLIST-" and isPlaying == True and currentTrack !="none":
 			subprocess.Popen(["mv", home + "cache/" + currentTrack, home + "blacklist/" ])
-			genList()
+			GenList()
 			window["-SONGS-"].update(values=spotList)
 			event="-SKIP-"
 
@@ -1397,14 +1404,14 @@ def Player():
                 
 		# Search
 		if event == "-SEARCH-" and edit == False:
-			if (search == False):
-				search=True
+			if search == True:
+				search=False
 				window["-INSEARCH-"].update("",disabled=True)
 				window["-SONGS-"].update(values=spotList)
-				window["-SEARCH-"].update(button_color="#99aabf")
+				window["-SEARCH-"].update(button_color=accent)
 			else:
-				search=False
-				window["-SEARCH-"].update(button_color="#bbccdf")        
+				search=True
+				window["-SEARCH-"].update(button_color=highlight)        
 				window["-INSEARCH-"].update(disabled=False)
         
 		# EDIT CLICKED EVENT
@@ -1412,12 +1419,12 @@ def Player():
 			if edit == False:
 				edit = True
 				search=True  
-				window["-SEARCH-"].update(button_color="#99aabf")
-				window["-EDIT-"].update(button_color="#bbccdf")
+				window["-SEARCH-"].update(button_color=accent)
+				window["-EDIT-"].update(button_color=highlight)
 				editName=""
-				editI="999999999999999999999999999999999"
+				editI=""
 			else:
-				window["-EDIT-"].update(button_color="#99aabf")
+				window["-EDIT-"].update(button_color=accent)
 				edit = False
 				if len(editName) == 0:
 					window["-INSEARCH-"].update("")
@@ -1426,14 +1433,14 @@ def Player():
 					if editI < len(spotList):
 						spotSID=" "
 						for i in range(0,len(tempID)):
-							text=subprocess.Popen(["cat", "/home/seth/.navi/navify/cache/" + tempID[i]], stdout=subprocess.PIPE, text=True).communicate()[0]                   
+							text=subprocess.Popen(["cat", home + "cache/" + tempID[i]], stdout=subprocess.PIPE, text=True).communicate()[0]                   
 							if ID[editI] in text:
 								spotSID=tempID[i]
 								break
 
-						text=subprocess.Popen(["cat", "/home/seth/.navi/navify/cache/"
+						text=subprocess.Popen(["cat", home + "cache/"
      + spotSID], stdout=subprocess.PIPE, text=True).communicate()[0]
-						f=open("/home/seth/.navi/navify/cache/" + spotSID, 'w')
+						f=open(home + "cache/" + spotSID, 'w')
 						l=text[len(text)-3:]                
 						f.write(text[0:int(l)] + ";" + editName + " " + l)
 						f.close()
@@ -1441,7 +1448,7 @@ def Player():
 						window["-INSEARCH-"].update(disabled=True)
 						spotList[editI] = editName
 						listed[editI] = editName
-						genList()                
+						GenList()                
 						window["-SONGS-"].update(values=spotList)
 					else:
 						edit = False
@@ -1501,19 +1508,7 @@ def Player():
 
 		# Skip/Next
 		if event == "-SKIP-" and isPlaying == True:
-			process = subprocess.Popen([home + "scripts/display/killmpv.sh"], stdout=subprocess.PIPE, text=True)
-			process=process.communicate()[0][4:]
-			window["-PLAY-"].update(image_filename=home + "icons/pause.png")
-			play=True
-			for i in range(len(process)):
-				if not " " in process[i:i+1]:
-					process=process[i:]
-					break
-			for i in range(0, len(process)):
-				if " " in process[i:i+1]:
-					process=process[0:i]
-					break
-			subprocess.run(["kill", process])      
+			KillMPV()    
 			            
 
 		# PLAY/PAUSE
@@ -1547,7 +1542,7 @@ def Listener(cmd):
 		print(a, " left the server (Disconnected by user)")
 		break
 
-viewAllCondense(viewAll(home[0:len(home) - len(playerLoc)] +"/Music"), viewAll(home + "playCache")) # Appends local files to the listed array because I am too lazy to come up with a better solution
+ViewAllCondense(ViewAll(home[0:len(home) - len(playerLoc)] +"/Music"), ViewAll(home + "playCache")) # Appends local files to the listed array because I am too lazy to come up with a better solution
 Player()
 
 #-------------------------------------------------
@@ -1558,14 +1553,4 @@ window.close() # Closes the window
 s.shutdown(socket.SHUT_RDWR) # Shuts down the server
 s.close() 
 		  
-process = subprocess.Popen([home + "scripts/display/killmpv.sh"], stdout=subprocess.PIPE, text=True) # Stops the music player
-process=process.communicate()[0][4:]
-for i in range(0,len(process)):
-	if not " " in process[i:i+1]:
-		process=process[i:]
-		break
-for i in range(0, len(process)):
-	if " " in process[i:i+1]:
-		process=process[0:i]
-		break
-subprocess.run(["kill", process])        
+KillMPV()      
