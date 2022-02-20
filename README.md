@@ -28,6 +28,7 @@ Potential Updates
 - Ability to add new paths to the local songs section
 - More settings
 - Ability to edit local songs
+- Support to cache songs from Spotify
 
 Known Issues
 ------------
