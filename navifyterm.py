@@ -360,6 +360,8 @@ def Player():
 		  
 	# Start of the Main Loop
 	while True:
+		keyDown = keyboard.Listener(on_press=events)
+		
 		# Networking
 		try:
 			if pN.is_alive() == False:
@@ -368,8 +370,6 @@ def Player():
 				f = open(home + 'info.pkl', 'rb')
 				cmd=pickle.load(f)[4]
 				print(cmd)
-				if cmd == "blacklist":
-					event="-BLACKLIST-"
 				pN = Process(target=Listener, args=(), daemon=True)
 				pN.start()
 				cmd=""
@@ -393,8 +393,6 @@ def Player():
 						current=float(current[8:i])
 						break
 
-				if time == 0:
-					window["-BAR-"].update(current*100, range=(0,duration*100))
 				min = int(current/60)
 				sec = int((current - min*60))
 				if sec >= 10:
@@ -408,7 +406,6 @@ def Player():
 				else:
 					duration = str(min) + ":0" + str(sec)
 				current = current + "/" + duration
-				window["-TIME-"].update(current)
 				
 			except:
 				pass
@@ -417,7 +414,6 @@ def Player():
 		try:
 			if isPlaying == True and p.is_alive() == False:
 				p.join()
-				window["-LIKE-"].update(image_filename=home + "icons/elike.png")
 				isPlaying=False
 		except:
 			pass
@@ -428,10 +424,6 @@ def Player():
 				queue = ["[CLEAR]"]
 				for i in range(len(prequeue)):
 					queue.append(prequeue[i])
-			window["-PLAY-"].update(image_filename=home + "icons/play.png")
-			window["-PLAYING-"].update("Now Playing: Nothing")
-			window["-TIME-"].update("0:00/0:00")
-			window["-BAR-"].update(0, range=(0,1))
 			play=False
 
 		# Checks if there are songs queued
@@ -449,371 +441,34 @@ def Player():
 				if listed[i][1] == queue[a]:
 					tname=listed[i][1]					
 					skip = True						
-					window["-PLAYING-"].update("Now Playing: " + tname)
 				if listed[i][0] == queue[a] or skip==True:
 					valid=1
 					if skip==False:
-						window["-PLAYING-"].update("Now Playing: " + listed[i][0])
 					upDesktop(i, tname)
 					p = Process(target=Play, args=(i, ), daemon=True)
 					p.start()
 					playing=queue[a]
 					del queue[a]              
-					window["-QUEUE-"].update(values=queue)
-					play=True
-					window["-PLAY-"].update(image_filename=home + "icons/pause.png")                
+					play=True              
 					isPlaying=True					
 					break
 			if valid==0:
 				del queue[a]
-				window["-QUEUE-"].update(values=queue)
  
-def Events():
-	keyDown = keyboard.Listener(on_press=GetKey)
-	# Grabbing the slider
-		if event == "-BAR-" and isPlaying==True:
-			time=200
-			subprocess.check_output(('socat', '-', '/tmp/mpvsocket'), stdin=subprocess.Popen(('echo', '{ "command": ["set_property", "playback-time", ' + str(values["-BAR-"]/100) + '] }'), stdout=subprocess.PIPE).stdout, text=True)
-
-		# LOCAL SONG EVENT
-		if event == "-LOCAL-":
-			if edit==False: # I still don't know how this works
-				if level == 0:
-					if values["-LOCAL-"][0] == localMain[1]:
-						path = home + "playCache"
-						isCache=True
-						updateLocal(path, isCache)
-
-					elif values["-LOCAL-"][0] == localMain[2] and level == 0:
-						path = home[0:len(home) - len(playerLoc)] +"/Music"
-						isCache=False
-						updateLocal(path, isCache)
-
-					else:
-						vAll=True
-						path="all"
-						locTracks = viewAllCondense(viewAll(home[0:len(home) - len(playerLoc)] +"/Music"), viewAll(home + "playCache"))
-						window["-LOCAL-"].update(values=locTracks)
-					level=level+1	
-			
-				# Goes up one level 
-				if values["-LOCAL-"][0] == "..." and level != 0:
-					level=level-1			
-					if level == 0:
-						window["-LOCAL-"].update(values=localMain)
-					else:
-						x=0
-						for i in range(len(path)):
-							if "/" in path[i:i+1]:
-								x=i
-						path=path[0:x]
-						updateLocal(path, isCache)
-					vAll=False
-				
-				if values["-LOCAL-"][0] == "[ALL]" and level == 1:				
-					if isCache==False:
-						locTracks = viewAllCondense(viewAll(home[0:len(home) - len(playerLoc)] +"/Music"), [])
-						window["-LOCAL-"].update(values=locTracks)
-					else:
-						locTracks = viewAllCondense([], viewAll(home + "playCache"))	
-						window["-LOCAL-"].update(values=locTracks)
-					path=path+"/ "
-					vAll=True			
-					level=level+1	
-			
-				# Opens folders
-				if os.path.isdir(path + "/" + values["-LOCAL-"][0]) and level != 0:
-					path = path + "/" + values["-LOCAL-"][0]				
-					updateLocal(path, isCache)
-					level = level + 1
-
-				else:
-
-					# Plays a song 
-					if vAll==False: # Especially this part. HOW?
-						if values["-LOCAL-"][0] != "[TRACKS]": 					
-							for i in range(1, len(listed)):
-								if (listed[i][0] == path + "/" + values["-LOCAL-"][0]):
-									queue.append(listed[i][1])
-									if repeat == 1:
-										prequeue.append(listed[i][1])
-									window["-QUEUE-"].update(values=queue)
-									break
-						else:
-							tempName=[]
-							tempName=playAll(path, isCache)
-							for i in range(len(tempName)):					
-								queue.append(tempName[i])
-								if repeat == 1:
-									prequeue.append(tempName[i])
-		
-					# If all is active on main level				
-					else:
-						if values["-LOCAL-"][0] != "[TRACKS]":
-							for i in range(len(locTracks)):
-								if values["-LOCAL-"][0] == locTracks[i]: 					
-									for x in range(1,len(listed)):
-										if (listed[x][0] == locPaths[i]):
-											queue.append(listed[x][1])
-											
-											if repeat == 1:
-												prequeue.append(listed[x][1])
-											window["-QUEUE-"].update(values=queue)
-											break 
-									break
-						else:
-							for i in range(3,len(locTracks)):					
-								queue.append(locTracks[i])
-								if repeat == 1:
-									prequeue.append(locTracks[i])
-					window["-QUEUE-"].update(values=queue)
-
-			if edit == True:
-				window["-INSEARCH-"].update(disabled=False)
-				window["-INSEARCH-"].update(str(values["-LOCAL-"][0]))
-				for i in range(0, len(listed)):
-					if (str(listed[i]) == str(values["-LOCAL-"][0])):
-						editI=i
-						break
-			
-		# SONG SELECTED EVENT
-		if event == "-SONGS-":
-			if edit == False:
-				if values["-SONGS-"][0] == "[PLAY ALL]":
-					for i in range(1,len(spotList)):
-						queue.append(spotList[i])
-						window["-QUEUE-"].update(values=queue)
-				else:
-					# Checks if the song needs to be added to queue
-					for i in range(len(listed)):
-						if (listed[i][0] == values["-SONGS-"][0]):
-							queue.append(listed[i][0])
-							if repeat == 1:
-								prequeue.append(listed[i][0])
-							window["-QUEUE-"].update(values=queue)
-							break      
-			if edit == True:
-				window["-INSEARCH-"].update(disabled=False)
-				window["-INSEARCH-"].update(str(values["-SONGS-"][0]))
-				for i in range(0, len(listed)):
-					if (str(listed[i][0]) == str(values["-SONGS-"][0])):
-						editI=i
-						break
-		# QUEUE Event
-		if event == "-QUEUE-":
-			if values["-QUEUE-"][0] == "[CLEAR]":
-				if repeat==1:
-					for i in range(1,len(queue)):
-						for x in range(len(prequeue)):
-							if prequeue[x] in queue[i]:
-								del prequeue[x]
-								break
-				queue=["[CLEAR]"]
-				window["-QUEUE-"].update(values=queue)
-			else:
-				for i in range(1,len(queue)):
-					if queue[i] == str(values["-QUEUE-"][0]):
-						if (repeat == 1):
-							for x in range(len(prequeue)):
-								if (prequeue[x] == queue[i]):
-									del prequeue[x]
-									break
-						del queue[i]
-						window["-QUEUE-"].update(values=queue)
-						break
-			# Add song event
-		if event == "-ADD-":
-			Add()
-			genList()
-			window["-LOCAL-"].update(values=localMain)
-            
-		# Repeat
-		if event == "-REPEAT-":
-			if repeat == 0:
-				window["-REPEAT-"].update(image_filename=home + "icons/repeat.png")
-				repeat=1
-				if isPlaying == True:
-					prequeue.append(playing)
-					for i in range(1,len(queue)):
-						prequeue.append(queue[i])
-			else:
-				window["-REPEAT-"].update(image_filename=home + "icons/nrepeat.png")
-				repeat=0
-				prequeue=[]
-
-		# Shuffle
-		if event == "-SHUFFLE-":
-			if shuffle == 0:
-				window["-SHUFFLE-"].update(image_filename=home + "icons/shuffle.png")
-				shuffle=1
-			else:
-				window["-SHUFFLE-"].update(image_filename=home + "icons/nshuffle.png")
-				shuffle=0
-		# BLACKLIST
-		if event == "-BLACKLIST-" and isPlaying == True and currentTrack !="none":
-			subprocess.Popen(["mv", home + "cache/" + currentTrack, home + "blacklist/" ])
-			genList()
-			window["-SONGS-"].update(values=spotList)
-			event="-SKIP-"
-
-		# Like
-		if event == "-LIKE-" and isPlaying == False and currentTrack != "none":
-			if exists(home + "icons/likes.pkl"):
-				f = open( home + 'icons/likes.pkl', 'wb')
-				liked=1            
-				for i in (range(0,len(likes))):
-					if currentTrack == likes[i]:
-						liked=0
-						window["-LIKE-"].update(image_filename=home + "icons/elike.png")
-						sp.current_user_saved_tracks_delete([track])
-						del likes[i]
-						break
-				if liked == 1:  
-					likes.append(current)
-					sp.current_user_saved_tracks_add([track])
-					window["-LIKE-"].update(image_filename=home + "icons/like.png")            
-				pickle.dump(likes, f)
-				f.close()
-                
-		# Search
-		if event == "-SEARCH-" and edit == False:
-			if (search == False):
-				search=True
-				window["-INSEARCH-"].update("",disabled=True)
-				window["-SONGS-"].update(values=spotList)
-				window["-SEARCH-"].update(button_color="#99aabf")
-			else:
-				search=False
-				window["-SEARCH-"].update(button_color="#bbccdf")        
-				window["-INSEARCH-"].update(disabled=False)
-        
-		# EDIT CLICKED EVENT
-		if event == "-EDIT-":
-			if edit == False:
-				edit = True
-				search=True  
-				window["-SEARCH-"].update(button_color="#99aabf")
-				window["-EDIT-"].update(button_color="#bbccdf")
-				editName=""
-				editI="999999999999999999999999999999999"
-			else:
-				window["-EDIT-"].update(button_color="#99aabf")
-				edit = False
-				if len(editName) == 0:
-					window["-INSEARCH-"].update("")
-					window["-INSEARCH-"].update(disabled=True)
-				if len(editName) > 0 and editName != listed[editI]:
-					if editI < len(spotList):
-						spotSID=" "
-						for i in range(0,len(tempID)):
-							text=subprocess.Popen(["cat", "/home/seth/.navi/navify/cache/" + tempID[i]], stdout=subprocess.PIPE, text=True).communicate()[0]                   
-							if ID[editI] in text:
-								spotSID=tempID[i]
-								break
-
-						text=subprocess.Popen(["cat", "/home/seth/.navi/navify/cache/"
-     + spotSID], stdout=subprocess.PIPE, text=True).communicate()[0]
-						f=open("/home/seth/.navi/navify/cache/" + spotSID, 'w')
-						l=text[len(text)-3:]                
-						f.write(text[0:int(l)] + ";" + editName + " " + l)
-						f.close()
-						window["-INSEARCH-"].update("")
-						window["-INSEARCH-"].update(disabled=True)
-						spotList[editI] = editName
-						listed[editI] = editName
-						genList()                
-						window["-SONGS-"].update(values=spotList)
-					else:
-						edit = False
-						if "\n" in ID[editI]:
-							ID[editI] = ID[editI][0:len(ID[editI])-1]
-						link=ID[editI][len(ID[editI])-11:]
-						for i in range(len(locID)):                
-							if link in locID[i]:
-								if exists(home + locID[i]):
-									f=open(home + locID[i], 'w')               
-									f.write(editName)
-									f.close()
-									window["-INSEARCH-"].update("")
-									window["-INSEARCH-"].update(disabled=True)
-									for i in range(0, len(localList)):
-										if localList[i] == listed[editI]:                            
-											listed[editI] = editName
-											localList[i] = editName
-											break                
-									window["-LOCAL-"].update(values=folders)
-									break
-
-		# PLAYLIST BUTTON EVENT
-		if event == "-PLAYLIST-":
-			temp=[]
-			temp=Playlist()
-			for i in range(len(temp)):
-				queue.append(temp[i])
-			window["-QUEUE-"].update(values=queue)
-
-		# Search Box
-		if event == "-INSEARCH-":
-			if edit == False:
-				newList=[]
-				for i in range(len(spotList)):
-					if values["-INSEARCH-"].lower() in spotList[i].lower():
-						newList.append(spotList[i])
-				window["-SONGS-"].update(values=newList)
-			if edit == True:
-				editName=str(values["-INSEARCH-"])
-
-		# NAVIFY EVENT
-		if event == "-NAVIFY-": 
-			tempList = navify()
-			genList()
-			window["-SONGS-"].update(values=spotList)
-			window["-PLAY-"].update(image_filename=home + "icons/pause.png")
-			for i in range(len(tempList)):
-				for x in range(len(ID)):
-					if tempList[i] == ID[x]:                
-						queue.append(listed[x][0])
-						if (repeat == 1):
-							prequeue.append(listed[x][0])
-						break
-			window["-QUEUE-"].update(values=queue)
-
-		# SETTINGS        
-		if event == "-SETTINGS-":
-			Settings()
-
-		# PLAYALL
-		if event == "-LAYALL-":
-			for i in range(0,len(listed)):
-				queue.append(listed[i][0])
-
-		# Skip/Next
-		if event == "-SKIP-" and isPlaying == True:
-			process = subprocess.Popen([home + "scripts/display/killmpv.sh"], stdout=subprocess.PIPE, text=True)
-			process=process.communicate()[0][4:]
-			window["-PLAY-"].update(image_filename=home + "icons/pause.png")
-			play=True
-			for i in range(len(process)):
-				if not " " in process[i:i+1]:
-					process=process[i:]
-					break
-			for i in range(0, len(process)):
-				if " " in process[i:i+1]:
-					process=process[0:i]
-					break
-			subprocess.run(["kill", process])      
-			            
+def Events(keyDown):
+	try:
+		key = keyDown.char
+	except:
+		key = keyDown.name
 
 		# PLAY/PAUSE
-		if event == "-PLAY-":    
+		if 'a' in key:    
 			if play == True:
 				subprocess.run([home + "scripts/display/pause.sh", "1"])
 				play = False
-				window["-PLAY-"].update(image_filename=home + "icons/play.png")   
 			else:
 				subprocess.run([home + "scripts/display/pause.sh", "2"])
 				play = True
-				window["-PLAY-"].update(image_filename=home + "icons/pause.png")  
-	
+				
 viewAllCondense(viewAll(home[0:len(home) - len(playerLoc)] +"/Music"), viewAll(home + "playCache")) # Appends local files to the listed array because I am too lazy to come up with a better solution
 Player()
