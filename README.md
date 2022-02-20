@@ -12,17 +12,6 @@ Running
 -------
     python navify.py
 
-Questions
------
-**Why does this exists?**
-One day I thought it would be great to integrate a Spotify player in my desktops taskbar. I went so far as to make the whole player and get the program to fetch songs when I realized that Spotify wanted me to buy a premium account to stream songs directly to my desktop. After some rough work arounds, I decided that since I can already pull the recommended songs, I should be able to play them through Youtube, and sure enough it worked.
-
-**Why not have an option to stream from Spotify?**
-Though the player was supposed to only stream from Spotify, I'm too lazy to purchase a premimum membership and try. Maybe one day I will add the option. 
-
-**Can I download songs?**
-No. Navify is not setup to download songs from anywhere. Though it can play songs that you download, there is no option to download songs and there are no plans to add it either. 
-
 Potential Updates
 -----------------
 - Support to stream from Spotify
