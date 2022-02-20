@@ -1,5 +1,6 @@
 # Navify GUI by Seth McKee
 # Version 1.0
+# Oops! All bloat!
 
 import pickle
 import subprocess
@@ -44,6 +45,7 @@ ID=[] # Youtube URL to Songs
 listed=[] # Name of Songs and the Spotify ID for it
 spotList=[] # Name of Spotify Songs Only to List in GUI
 localList=[] # Name of Local Songs Only to List in GUI
+locPaths=[] # List of paths to local songs
 
 likes=[] # List of Liked Songs
 
@@ -151,7 +153,7 @@ likes=genLikes()
 # DEFINE MAIN FUNCTIONS
 #-------------------------------------------------
 
-def Play(x):
+def Play(x, finished):
 	track=ID[x]
 	trackID=ID[x]    
 	vol=100
@@ -163,6 +165,7 @@ def Play(x):
 	vol=settings[0]
 
 	subprocess.run(["mpv","--no-video", "--input-ipc-server=/tmp/mpvsocket", "--volume=" + str(vol), track])
+	finished.put(True)
 
 def playAll(select, isCache):
 	tracks=next(walk(select), (None, None, []))[2]
@@ -215,7 +218,7 @@ def upDesktop(x, alt):
 
 	if valid == 0:
 		currentTrack = "none"
-		info = [fname, "", "", name, ""]
+		info = [fname, "", "", name]
 		f = open(home + 'info.pkl', 'wb')
 		pickle.dump(info, f)
 		f.close()
@@ -278,10 +281,10 @@ def viewAll(path):
 	return allFiles           
 	
 def viewAllCondense(l1, l2):
-	global locTracks # NAMES OF THE SONGS
-	global locPaths # LISTED PATH TO SONG WITH SONG NAMES
 	global listed 
 	global ID
+	global locPaths
+	
 	locTracks=[]
 	locPaths=[]
 	locID=[] # URLS AND PATHS TO SONGS
@@ -349,8 +352,11 @@ def viewAllCondense(l1, l2):
 				break
 
 	for i in range(len(locTracks)):
-		listed.append([locPaths[i], locTracks[i]])
-		ID.append(locID[i])
+		for x in range(len(ID):
+			if locID[i] != ID[x]:
+				listed.append([locPaths[i], locTracks[i]])
+				ID.append(locID[i])
+				break
 
 	return tempList	
 
@@ -415,10 +421,8 @@ def genList():
 		f.close()
 genList() 
 
-def navify():
-	recList=[]
-	recTrack=[]
-	recArtist=[]  
+def Navify(tempQ):
+	recList=[] 
 	recId=[]
 	fText=""
 
@@ -429,7 +433,7 @@ def navify():
 		f.close()
 	else:
 		print("NOTICE: Recommended tracks list is not set up. Defaulting to the first 5 liked songs.")
-		tracks = likes[0:4]
+		tracks = list(likes[0:4])
 			    
 	# Sets up the playlist to use based off of the first 5 tracks in the liked playlist
 	rec=sp.recommendations(seed_tracks=tracks, limit=50)
@@ -437,17 +441,10 @@ def navify():
 	# Checks to see if a track is in the blacklist
 	for i in range(0,49):
 		if not exists(home + 'blacklist/' + str(rec['tracks'][i]['id'])):
-			recTrack.append(str(rec['tracks'][i]['name']))
-			recArtist.append(str(rec['tracks'][i]['artists'][0]['name']))
 			recList.append(str(rec['tracks'][i]['name']) + " " + str(rec['tracks'][i]['artists'][0]['name']))
 			recId.append(rec['tracks'][i]['id'])
-		else:
-			recTrack.append("skip")
-			recArtist.append("skip")
-			recList.append("skip")
-			recId.append("skip")
 
-        # Checks to see if a track is in the cache directory and caches it if not
+    # Checks to see if a track is in the cache directory and caches it if not
 	tracksName=[]    
 	for i in range(0,len(recId)):
 		if not exists(home + "cache/" + recId[i]) and recId[i] != "skip":
@@ -463,7 +460,7 @@ def navify():
 	for i in range(0,len(recId)):
 		currentFile = subprocess.Popen(["cat", home + "cache/" + recId[i]], stdout=subprocess.PIPE, text=True).communicate()[0]                    
 		tracksName.append(currentFile[0:43]) # Appends YouTube link
-	return tracksName
+	tempQ.put(tracksName)
 
 def Search(string, cache, name, url):       
 	req=request.Request("https://youtube.com/results?search_query=" + url, headers=header)
@@ -687,7 +684,6 @@ def Add():
 				   	text_justification="center",
 					border_depth=None
 				)
-				print("bruh")
 				while True:
 					event2, values2 = window2.read()
 
@@ -1043,11 +1039,11 @@ window = sg.Window("Navify",
 
 def Player():
 	global spotList
-	global locTracks
-	global locPaths
-	
+	global level
+					   
 	# Default Values
 	isPlaying=False # Set to True When a Song Gets Played
+	navify=False # Set to True when the Navify event is called
 	path="" # Path to Local Songs
 	level=0 # How Many Folders Down the Local Section is
 	isCache=True # Set to true if the viewed folder is YouTube cache
@@ -1070,11 +1066,10 @@ def Player():
 	# Start of the Main Loop
 	while True:
 		event, values = window.read(timeout=100)
-
+				
 		# Networking
 		try:
 			if pN.is_alive() == False:
-				print("test")
 				pN.join()
 				f = open(home + 'info.pkl', 'rb')
 				cmd=pickle.load(f)[4]
@@ -1088,6 +1083,11 @@ def Player():
 			pN = Process(target=Listener, args=(), daemon=True)
 			pN.start()
 
+		# Resets after the song is finished		
+		if isPlaying == True:
+			if finished=p.get(finished) == True:
+				p.join()
+				isPlaying=False
 
 		# Progress bar stuff
 		if isPlaying == True:
@@ -1122,36 +1122,16 @@ def Player():
 				window["-TIME-"].update(current)
 				
 			except:
-				pass
+				print("Songs is not playing yet")
+				
 		# Grabbing the slider
 		if event == "-BAR-" and isPlaying==True:
 			time=200
 			subprocess.check_output(('socat', '-', '/tmp/mpvsocket'), stdin=subprocess.Popen(('echo', '{ "command": ["set_property", "playback-time", ' + str(values["-BAR-"]/100) + '] }'), stdout=subprocess.PIPE).stdout, text=True)
 
-		# Resets after the song is finished		
-		try:
-			if isPlaying == True and p.is_alive() == False:
-				p.join()
-				window["-LIKE-"].update(image_filename=home + "icons/elike.png")
-				isPlaying=False
-		except:
-			pass
-
-		# END OF SONG WITH NO QUEUE EVENT    
-		if len(queue) == 1 and isPlaying == False:          
-			if repeat == 1:
-				queue = ["[CLEAR]"]
-				for i in range(len(prequeue)):
-					queue.append(prequeue[i])
-			window["-PLAY-"].update(image_filename=home + "icons/play.png")
-			window["-PLAYING-"].update("Now Playing: Nothing")
-			window["-TIME-"].update("0:00/0:00")
-			window["-BAR-"].update(0, range=(0,1))
-			play=False
-
 		# LOCAL SONG EVENT
 		if event == "-LOCAL-":
-			if edit==False: # I still don't know how this works
+			if edit==False: # I still don't know how this works. I was tried 
 				if level == 0:
 					if values["-LOCAL-"][0] == localMain[1]:
 						path = home + "playCache"
@@ -1242,7 +1222,7 @@ def Player():
 									prequeue.append(locTracks[i])
 					window["-QUEUE-"].update(values=queue)
 
-			if edit == True:
+			if edit == True and level > 0 and isCache == True:
 				window["-INSEARCH-"].update(disabled=False)
 				window["-INSEARCH-"].update(str(values["-LOCAL-"][0]))
 				for i in range(0, len(listed)):
@@ -1296,6 +1276,36 @@ def Player():
 						window["-QUEUE-"].update(values=queue)
 						break
 
+		# Append Navify to queue
+		if navify==True:
+			if len(pNa.put(tempQ)) > 0:
+				genList()
+				window["-SONGS-"].update(values=spotList)
+				for i in range(len(tempList)):
+					for x in range(len(ID)):
+						if tempQ[i] == ID[x]:                
+							queue.append(listed[x][0])
+							if (repeat == 1):
+								prequeue.append(listed[x][0])
+							break
+				window["-QUEUE-"].update(values=queue)
+				tempQ=[]
+				pNa.join()
+				navify=False
+						
+		# END OF SONG WITH NO QUEUE EVENT    
+		if len(queue) == 1 and isPlaying == False:          
+			if repeat == 1:
+				queue = ["[CLEAR]"]
+				for i in range(len(prequeue)):
+					queue.append(prequeue[i])
+			else:
+				window["-PLAY-"].update(image_filename=home + "icons/play.png")
+				window["-PLAYING-"].update("Now Playing: Nothing")
+				window["-TIME-"].update("0:00/0:00")
+				window["-BAR-"].update(0, range=(0,1))
+				play=False
+						
 		# Checks if there are songs queued
 		if len(queue) > 1 and isPlaying == False:
 			valid=0
@@ -1317,7 +1327,8 @@ def Player():
 					if skip==False:
 						window["-PLAYING-"].update("Now Playing: " + listed[i][0])
 					upDesktop(i, tname)
-					p = Process(target=Play, args=(i, ), daemon=True)
+					finished = Process.Queue(False)
+					p = Process(target=Play, args=(i, finished, ), daemon=True)
 					p.start()
 					playing=queue[a]
 					del queue[a]              
@@ -1473,20 +1484,12 @@ def Player():
 				editName=str(values["-INSEARCH-"])
 
 		# NAVIFY EVENT
-		if event == "-NAVIFY-": 
-			tempList = navify()
-			genList()
-			window["-SONGS-"].update(values=spotList)
-			window["-PLAY-"].update(image_filename=home + "icons/pause.png")
-			for i in range(len(tempList)):
-				for x in range(len(ID)):
-					if tempList[i] == ID[x]:                
-						queue.append(listed[x][0])
-						if (repeat == 1):
-							prequeue.append(listed[x][0])
-						break
-			window["-QUEUE-"].update(values=queue)
-
+		if event == "-NAVIFY-" and navify == False: 
+			navify = True
+			tempQ = Process.Queue([])
+			pNa = Process(target=Navify, args=(tempQ, ), daemon=True)
+			pNa.start()
+			
 		# SETTINGS        
 		if event == "-SETTINGS-":
 			Settings()
@@ -1533,24 +1536,16 @@ def Player():
 #-------------------------------------------------
 # NETWORKING
 #-------------------------------------------------
-def Listener():
+def Listener(cmd):
 	global s
 	s.listen(5)
-	cmd=""
 	while True:	
 		c, a = s.accept() 
 		print (a, " connected to the server")
-		cmd=c.recv(1024).decode()
+		cmd.put(c.recv(1024).decode())
 		c.close()
 		print(a, " left the server (Disconnected by user)")
 		break
-	f = open(home + 'info.pkl', 'rb')
-	info = pickle.load(f)
-	f.close()
-	info[4] = cmd
-	f = open(home + 'info.pkl', 'wb')
-	pickle.dump(info, f)
-	f.close()
 
 viewAllCondense(viewAll(home[0:len(home) - len(playerLoc)] +"/Music"), viewAll(home + "playCache")) # Appends local files to the listed array because I am too lazy to come up with a better solution
 Player()
@@ -1561,12 +1556,7 @@ Player()
 		  
 window.close() # Closes the window
 s.shutdown(socket.SHUT_RDWR) # Shuts down the server
-s.close() # Ditto
-		  
-try:
-	p.join()
-except:
-	pass
+s.close() 
 		  
 process = subprocess.Popen([home + "scripts/display/killmpv.sh"], stdout=subprocess.PIPE, text=True) # Stops the music player
 process=process.communicate()[0][4:]
