@@ -18,7 +18,7 @@ One day I thought it would be great to integrate a Spotify player in my desktops
 Though the player was supposed to only stream from Spotify, I'm too lazy to purchase a premimum membership and try. Maybe one day I will add the option. 
 
 **Can I download songs?**
-No. Navify is not setup to download songs from anywhere. It can only stream the from YouTube at the moment. Though it can play songs that you download, there is no option to download songs and there are no plans to add it either. 
+No. Navify is not setup to download songs from anywhere. Though it can play songs that you download, there is no option to download songs and there are no plans to add it either. 
 
 Potential Updates
 -----------------
