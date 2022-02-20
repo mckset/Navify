@@ -1,29 +1,27 @@
 # Navify GUI by Seth McKee
-# Version 1.0
-# Oops! All bloat!
+# Version 1.0: Oops! All bloat!
 
+# System
 import pickle
 import subprocess
 import random
 import os
 import sys
 import re
+from multiprocessing import Process
+from os.path import exists
+from os import walk
 
+# Spotify
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
 
+# YouTube 
 from urllib import request, parse
 import requests
-
 import io
 from PIL import Image
 import PySimpleGUI as sg
-
-from multiprocessing import Process
-
-# File checking
-from os.path import exists
-from os import walk
 
 # Used to communicate with the taskbar
 import socket 
@@ -64,6 +62,7 @@ s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 port=6969
 s.bind(('', port))
+
 
 #-------------------------------------------------
 # SETUP FUNCTIONS
@@ -143,7 +142,9 @@ def GenLikes():
 	return likes
 
 SetupSettings()	   
-likes=GenLikes()		    
+likes=GenLikes()
+
+
 #-------------------------------------------------
 # DEFINE MAIN FUNCTIONS
 #-------------------------------------------------
@@ -367,6 +368,17 @@ def KillMPV():
 		break
 	subprocess.run(["kill", mpv]) 
 	
+def Listener(cmd): # For communicating with the taskbar
+	global s
+	s.listen(5)
+	while True:	
+		c, a = s.accept() 
+		print (a, " connected to the server")
+		cmd.put(c.recv(1024).decode())
+		c.close()
+		print(a, " left the server (Disconnected by user)")
+		break
+	
 def GenList(): 
 	global spotList
 	global ID
@@ -388,9 +400,8 @@ def GenList():
 	for i in range(len(tempID)):
 		currentFile = subprocess.Popen(["cat", home + "cache/" + tempID[i]], stdout=subprocess.PIPE, text=True).communicate()[0]
 		if ";" in currentFile:
-			length=int(currentFile[len(currentFile)-3:])
-			sortID.append(currentFile[0:length])
-			sortListed.append((currentFile[length+1:len(currentFile)-3]))
+			sortID.append(currentFile[0:43])
+			sortListed.append((currentFile[44:]))
 			spotName.append(tempID[i])
 
 	# Removes 'The' from the beginning of tracks to better sort
@@ -480,12 +491,14 @@ def Search(string, cache, name, url):
 			break
     
 	f = open("/home/seth/.navi/navify/cache/" + str(cache) , "w")
-	f.write("https://www.youtube.com/watch?v=" + video + ";" + name + " " + str(len("https://www.youtube.com/watch?v=" + video)))
+	f.write("https://www.youtube.com/watch?v=" + video + "" + name))
 	f.close()
         			    
+		
 #-------------------------------------------------
 # SUB-WINDOW LAYOUTS
-#-------------------------------------------------			    
+#-------------------------------------------------	
+
 def AddLayout(folders):
 	Search = [
 		[
@@ -549,9 +562,7 @@ def PlaylistLayout(files):
 def SettingsLayout(settings, rec):
 	layoutSettings = [
 		[
-		sg.Slider(range=(0,150), background_color=background,trough_color = foreground, default_value=settings[0], enable_events=True, key="-SVOL-"),
-		sg.Listbox(values=likes, background_color=foreground, text_color=textc, no_scrollbar=True, size=(25,1), enable_events=True,  expand_y=True, expand_x=True, key="-SLIKES-"),
-		sg.Listbox(values=rec, background_color=foreground,text_color=textc, no_scrollbar=True, size=(25,1), enable_events=True,  expand_y=True, expand_x=True, key="-SREC-")
+		sg.Slider(range=(0,150), background_color=background,trough_color = foreground, default_value=settings[0], enable_events=True, key="-SVOL-")
 		],
 		[
 		sg.Text("Volume", background_color=background)
@@ -949,6 +960,7 @@ def Settings():
 			window.close()
 			break
 
+			
 #-------------------------------------------------
 # DEFINE MAIN WINDOW LAYOUT
 #-------------------------------------------------
@@ -1040,6 +1052,7 @@ window = sg.Window("Navify",
 		   border_depth=None
 		  )
 
+
 #-------------------------------------------------
 # MAIN LOOP
 #-------------------------------------------------
@@ -1050,26 +1063,30 @@ def Player():
 					   
 	# Default Values
 	isPlaying=False # Set to True When a Song Gets Played
+	isCache=False # Set to true if the viewed folder is YouTube cache
 	navify=False # Set to True when the Navify event is called
-	path="" # Path to Local Songs
-	level=0 # How Many Folders Down the Local Section is
-	isCache=True # Set to true if the viewed folder is YouTube cache
-	queue=["[CLEAR]", ""] # Queued songs 
-	playing=""
-	duration=1 # How long the song lasts
-	current=1 # Current playtime position
-	search=True # Is the search bar off
+	search=False # Is the search bar on
 	play=False # State for the play button
 	edit=False # Is the user going to edit a song
-	editI=0 # Index of the song that is being edited in the list 'listed'
-	editName="" # New name for the song
-	time=0 # Count down to start moving the scrollbar again
-	repeat=0 # is the player set to repeat
-	shuffle=0 # Is the player set to shuffle
-	prequeue=[] # Saved queue to be called when repeat is on
+	repeat=False # is the player set to repeat
+	shuffle=False # Is the player set to shuffle
 	vAll=False # Set to true when local is viewing all tracks
+	
+	level=0 # How Many Folders Down the Local Section is
+	duration=1 # How long the song lasts
+	current=1 # Current playtime position
+	editI=0 # Index of the song that is being edited in the list 'listed'
+	time=0 # Count down to start moving the scrollbar again
+	
+	path="" # Path to Local Songs
+	playing=""
+	editName="" # New name for the song
 	cmd="" # Received command from taskbar
-		  
+	
+	queue=["[CLEAR]", ""] # Queued songs 
+	prequeue=[] # Saved queue to be called when repeat is on
+	prevSongs=[] # Previous songs, up to 100
+	
 	# Start of the Main Loop
 	while True:
 		event, values = window.read(timeout=100)
@@ -1196,7 +1213,7 @@ def Player():
 							for i in range(1, len(listed)):
 								if (listed[i][0] == path + "/" + values["-LOCAL-"][0]):
 									queue.append(listed[i][1])
-									if repeat == 1:
+									if repeat == True:
 										prequeue.append(listed[i][1])
 									window["-QUEUE-"].update(values=queue)
 									break
@@ -1205,7 +1222,7 @@ def Player():
 							tempName=PlayAll(path, isCache)
 							for i in range(len(tempName)):					
 								queue.append(tempName[i])
-								if repeat == 1:
+								if repeat == True:
 									prequeue.append(tempName[i])
 		
 					# If all is active on main level				
@@ -1217,7 +1234,7 @@ def Player():
 										if (listed[x][0] == locPaths[i]):
 											queue.append(listed[x][1])
 											
-											if repeat == 1:
+											if repeat == True:
 												prequeue.append(listed[x][1])
 											window["-QUEUE-"].update(values=queue)
 											break 
@@ -1225,7 +1242,7 @@ def Player():
 						else:
 							for i in range(3,len(locTracks)):					
 								queue.append(locTracks[i])
-								if repeat == 1:
+								if repeat == True:
 									prequeue.append(locTracks[i])
 					window["-QUEUE-"].update(values=queue)
 
@@ -1249,7 +1266,7 @@ def Player():
 					for i in range(len(listed)):
 						if (listed[i][0] == values["-SONGS-"][0]):
 							queue.append(listed[i][0])
-							if repeat == 1:
+							if repeat == True:
 								prequeue.append(listed[i][0])
 							window["-QUEUE-"].update(values=queue)
 							break      
@@ -1263,7 +1280,7 @@ def Player():
 		# QUEUE Event
 		if event == "-QUEUE-":
 			if values["-QUEUE-"][0] == "[CLEAR]":
-				if repeat==1:
+				if repeat==True:
 					for i in range(1,len(queue)):
 						for x in range(len(prequeue)):
 							if prequeue[x] in queue[i]:
@@ -1274,7 +1291,7 @@ def Player():
 			else:
 				for i in range(1,len(queue)):
 					if queue[i] == str(values["-QUEUE-"][0]):
-						if (repeat == 1):
+						if repeat == True:
 							for x in range(len(prequeue)):
 								if (prequeue[x] == queue[i]):
 									del prequeue[x]
@@ -1292,7 +1309,7 @@ def Player():
 					for x in range(len(ID)):
 						if tempQ[i] == ID[x]:                
 							queue.append(listed[x][0])
-							if (repeat == 1):
+							if repeat == True:
 								prequeue.append(listed[x][0])
 							break
 				window["-QUEUE-"].update(values=queue)
@@ -1302,7 +1319,7 @@ def Player():
 						
 		# END OF SONG WITH NO QUEUE EVENT    
 		if len(queue) == 1 and isPlaying == False:          
-			if repeat == 1:
+			if repeat == True:
 				queue = ["[CLEAR]"]
 				for i in range(len(prequeue)):
 					queue.append(prequeue[i])
@@ -1318,7 +1335,7 @@ def Player():
 			valid=0
 			a=1
 			tname=""
-			if shuffle == 1 and len(queue) > 2:
+			if shuffle == True and len(queue) > 2:
 				a = random.randrange(1,len(queue))
 
 			for i in range(len(listed)):
@@ -1333,6 +1350,9 @@ def Player():
 					valid=1
 					if skip==False:
 						window["-PLAYING-"].update("Now Playing: " + listed[i][0])
+						prevSongs.append(listed[i][0])
+					else:
+						prevSongs.append(listed[i][1])
 					UpDesktop(i, tname)
 					finished = Process.Queue(False)
 					p = Process(target=Play, args=(i, finished, ), daemon=True)
@@ -1356,26 +1376,26 @@ def Player():
             
 		# Repeat
 		if event == "-REPEAT-":
-			if repeat == 0:
+			if repeat == False:
 				window["-REPEAT-"].update(image_filename=home + "icons/repeat.png")
-				repeat=1
+				repeat=True
 				if isPlaying == True:
 					prequeue.append(playing)
 					for i in range(1,len(queue)):
 						prequeue.append(queue[i])
 			else:
 				window["-REPEAT-"].update(image_filename=home + "icons/nrepeat.png")
-				repeat=0
+				repeat=False
 				prequeue=[]
 
 		# Shuffle
 		if event == "-SHUFFLE-":
 			if shuffle == 0:
 				window["-SHUFFLE-"].update(image_filename=home + "icons/shuffle.png")
-				shuffle=1
+				shuffle=True
 			else:
 				window["-SHUFFLE-"].update(image_filename=home + "icons/nshuffle.png")
-				shuffle=0
+				shuffle=False
 		# BLACKLIST
 		if event == "-BLACKLIST-" and isPlaying == True and currentTrack !="none":
 			subprocess.Popen(["mv", home + "cache/" + currentTrack, home + "blacklist/" ])
@@ -1383,7 +1403,7 @@ def Player():
 			window["-SONGS-"].update(values=spotList)
 			event="-SKIP-"
 
-		# Like
+		# LIKE
 		if event == "-LIKE-" and isPlaying == False and currentTrack != "none":
 			if exists(home + "icons/likes.pkl"):
 				f = open( home + 'icons/likes.pkl', 'wb')
@@ -1402,7 +1422,7 @@ def Player():
 				pickle.dump(likes, f)
 				f.close()
                 
-		# Search
+		# SEARCH
 		if event == "-SEARCH-" and edit == False:
 			if search == True:
 				search=False
@@ -1522,35 +1542,31 @@ def Player():
 				play = True
 				window["-PLAY-"].update(image_filename=home + "icons/pause.png")   
 
+		# PREVIOUS
+		if event == "-PREV-" and len(prevSongs) > 0:
+			tempQ = list(queue)
+			queue.append(prevSongs[len(prevSongs)-1])
+			del prevSongs[len(prevSongs)-1]
+			for i in range(len(tempQ)):
+				queue=.append(tempQ[i])
+			window["-QUEUE-"].update(values=queue)
+				
+	
 		if event == sg.WIN_CLOSED:
 			break
 
 		if time != 0:
 			time=time-100
-
-#-------------------------------------------------
-# NETWORKING
-#-------------------------------------------------
-def Listener(cmd):
-	global s
-	s.listen(5)
-	while True:	
-		c, a = s.accept() 
-		print (a, " connected to the server")
-		cmd.put(c.recv(1024).decode())
-		c.close()
-		print(a, " left the server (Disconnected by user)")
-		break
-
+		
 ViewAllCondense(ViewAll(home[0:len(home) - len(playerLoc)] +"/Music"), ViewAll(home + "playCache")) # Appends local files to the listed array because I am too lazy to come up with a better solution
-Player()
+Player() # Starts the GUI
+
 
 #-------------------------------------------------
 # END AND CLEANUP
 #-------------------------------------------------
-		  
+		
 window.close() # Closes the window
 s.shutdown(socket.SHUT_RDWR) # Shuts down the server
 s.close() 
-		  
 KillMPV()      
