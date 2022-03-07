@@ -33,8 +33,8 @@ import PySimpleGUI as sg
 import socket 
 
 # Fonts
-defaultFont="Inter 40"
-smallFont="Inter 32"
+defaultFont="Mono 20"
+smallFont="Mono 16"
 
 # GUI Colors
 background="#ccccdc"
@@ -43,7 +43,7 @@ accent="#99aabf"
 highlight="#bbccdf"
 hover=("","#67778f")
 textc="#ffffff"
-alpha=0.8
+alpha=1
 
 # PLAYER STUFF
 ID=[] # Youtube URL to Songs
@@ -121,6 +121,56 @@ def SetupSettings():
 	global hover
 	global textc
 	global alpha
+
+	try:
+		subprocess.run(["socat"])
+	except:
+		window = sg.Window("ERROR", 
+		  layout = [[sg.Text("socat is not installed. Please install socat", text_color="#ff0000", background_color="#000000",  expand_x=True)]], 
+		   resizable=True,
+		   alpha_channel=1, 
+		   background_color="#000000",
+		   font=defaultFont,
+		   element_justification='r',
+		   text_justification="center",
+		   finalize = True
+		  )
+		window.read()
+		window.close()
+		sys.exit()
+
+	try:
+		subprocess.run(["mpv"])
+	except:
+		window = sg.Window("ERROR", 
+		  layout = [[sg.Text("MPV is not installed. Please install both MPV and Youtube-dl", text_color="#ff0000", background_color="#000000",  expand_x=True)]], 
+		   resizable=True,
+		   alpha_channel=1, 
+		   background_color="#000000",
+		   font=defaultFont,
+		   element_justification='r',
+		   text_justification="center",
+		   finalize = True
+		  )
+		window.read()
+		window.close()
+		sys.exit()
+	try:
+		subprocess.run(["youtube-dl"])
+	except:
+		window = sg.Window("ERROR", 
+		  layout = [[sg.Text("Youtube-dl is not installed. Please install both Youtube-dl", text_color="#ff0000", background_color="#000000",  expand_x=True)]], 
+		   resizable=True,
+		   alpha_channel=1, 
+		   background_color="#000000",
+		   font=defaultFont,
+		   element_justification='r',
+		   text_justification="center",
+		   finalize = True
+		  )
+		window.read()
+		window.close()
+		sys.exit()
 
 	if not exists(home + "settings.pkl"):
 		f = open(home + "settings.pkl", 'wb')
@@ -499,24 +549,20 @@ def Search(string, cache, name, url):
         			
 def ReloadNavify(queue):
 	SetupSettings()
+	# Create the window
 	window = sg.Window("Navify", 
-	   layout(queue), 
-	   keep_on_top=False, 
-	   force_toplevel=False, 
-	   no_titlebar=False, 
-	   resizable=False, 
-	   auto_size_text=True, 
-	   use_default_focus=True, 
-	   alpha_channel=alpha, 
-	   background_color=background, 
-	   button_color=accent,
-	   font=defaultFont,
-	   element_justification='r',
-	   text_justification="center",
-	   return_keyboard_events=True,
-	   border_depth=None,
-	   finalize = True
-	  )
+		   layout([queue]), 
+		   resizable=True,
+		   alpha_channel=alpha, 
+		   background_color=background, 
+		   button_color=accent,
+		   font=defaultFont,
+		   element_justification='r',
+		   text_justification="center",
+		   return_keyboard_events=True,
+		   finalize = True,
+		   size=(1080,480)
+		  )
 	return window
 #-------------------------------------------------
 # DEFINE MAIN WINDOW LAYOUT
@@ -578,12 +624,6 @@ def layout(queue):
 	# Sets the Layout for the Main Window
 	layout = [
 		[
-		sg.Titlebar(title = "Navify", icon = "", text_color = textc, background_color = background)
-		],
-		[
-		sg.HorizontalSeparator()
-		],
-		[
 		sg.Column(Local, expand_y=True,background_color=background,  expand_x=True), # Local Songs
 		sg.VSeparator(color=None),
 		sg.Column(SongList, expand_y=True,background_color=background,  expand_x=True), # Spotify Songs
@@ -602,6 +642,22 @@ def layout(queue):
 def key_down(event): # Prevents the space key from selecting songs
 	pass
 
+
+# Create the window
+window = sg.Window("Navify", 
+	   layout(["[CLEAR]"]), 
+	   resizable=True,
+	   alpha_channel=alpha, 
+	   background_color=background, 
+	   button_color=accent,
+	   font=defaultFont,
+	   element_justification='r',
+	   text_justification="center",
+	   return_keyboard_events=True,
+	   finalize = True,
+	   size=(1080,480)
+	  )
+
 #-------------------------------------------------
 # MAIN LOOP
 #-------------------------------------------------
@@ -611,6 +667,7 @@ def Player():
 	global level
 	global locPaths		  
 	global likes
+	global window
 
 	# Default Values
 	isPlaying=False # Set to True When a Song Gets Played
@@ -646,29 +703,13 @@ def Player():
 	settings=pickle.load(f)
 	f.close()
 
-	# Create the window
-	window = sg.Window("Navify", 
-		   layout(["[CLEAR]"]), 
-		   keep_on_top=False, 
-		   force_toplevel=False, 
-		   no_titlebar=False, 
-		   resizable=False, 
-		   auto_size_text=True, 
-		   use_default_focus=True, 
-		   alpha_channel=alpha, 
-		   background_color=background, 
-		   button_color=accent,
-		   font=defaultFont,
-		   element_justification='r',
-		   text_justification="center",
-		   return_keyboard_events=True,
-		   border_depth=None,
-		   finalize = True
-		  )
-
 	# Start of the Main Loop
 	while True:
 		event, values = window.read(timeout=100)
+
+		if event == sg.WIN_CLOSED:
+			window.close() # Closes the window
+			break
 
 		# Resets after the song is finished		
 		if isPlaying == True:
@@ -1178,9 +1219,7 @@ ViewAllCondense(ViewAll(playerLoc +"/Music"), ViewAll(home + "playCache")) # App
 
 Player() # Starts the GUI
 
-
 #-------------------------------------------------
 # END AND CLEANUP
 #-------------------------------------------------
-window.close() # Closes the window
 KillMPV()      
