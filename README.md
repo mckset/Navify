@@ -6,7 +6,18 @@ Requirements
 - MPV
 - Youtube-dl or an equivelant
 - Spotipy
-- Spotify developer app (https://developer.spotify.com/documentation/web-api/quick-start/#:~:text=To%20do%20that%2C%20simply%20sign%20up%20at%20www.spotify.com.,complete%20your%20account%20set%20up.%20Register%20Your%20Application)
+- Spotify developer app - must be setup by user (https://developer.spotify.com/documentation/web-api/quick-start/#:~:text=To%20do%20that%2C%20simply%20sign%20up%20at%20www.spotify.com.,complete%20your%20account%20set%20up.%20Register%20Your%20Application)
+
+Features
+--------
+- Grab a list of recommended songs from Spotify based off of your choice of liked songs (up to 5 songs at a time)
+- Play songs from either YouTube or your local music folder
+- Caches songs from Spotify to save time searching for them again (~75 bytes per song)
+- Ability to edit cached songs names and where the player looks to play the song (YouTube or the path to the song on your PC)
+- Ability to add songs from YouTube
+- A list of local songs in your 'Music' folder to play
+- Settings to change the color scheme and volume of the player
+- Ability to create and edit a playlist of both local and cached music
 
 Running
 -------
@@ -15,11 +26,6 @@ Running
 Potential Updates
 -----------------
 - Support to stream from Spotify
-- Ablity to edit playlists
 - Windows support
-- Ability to edit the song and their url
 - Local search
-- Ability to add new paths to the local songs section
 - More settings
-- Ability to edit local songs
-- Support to cache songs from Spotify
