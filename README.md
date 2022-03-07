@@ -4,8 +4,8 @@ A music streaming software for Linux that uses Spotify's recommendations and str
 Requirements
 ------------
 - MPV
-- Youtube-dl or an equivelant
-- Spotipy
+- Youtube-dl
+- Socat
 - Spotify developer app - must be setup by user (https://developer.spotify.com/documentation/web-api/quick-start/#:~:text=To%20do%20that%2C%20simply%20sign%20up%20at%20www.spotify.com.,complete%20your%20account%20set%20up.%20Register%20Your%20Application)
 
 Features
@@ -21,7 +21,7 @@ Features
 
 Running
 -------
-    python navify.py
+    ./navify
 
 Potential Updates
 -----------------
