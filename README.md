@@ -6,7 +6,7 @@ Requirements
 - MPV
 - Youtube-dl
 - Socat
-- Spotify developer app - must be setup by user (https://developer.spotify.com/documentation/web-api/quick-start/#:~:text=To%20do%20that%2C%20simply%20sign%20up%20at%20www.spotify.com.,complete%20your%20account%20set%20up.%20Register%20Your%20Application)
+- Spotify developer app - must be setup by the user (https://developer.spotify.com/documentation/web-api/quick-start/#:~:text=To%20do%20that%2C%20simply%20sign%20up%20at%20www.spotify.com.,complete%20your%20account%20set%20up.%20Register%20Your%20Application)
 
 Features
 --------
@@ -18,10 +18,20 @@ Features
 - A list of local songs in your 'Music' folder to play
 - Settings to change the color scheme and volume of the player
 - Ability to create and edit a playlist of both local and cached music
+- Supports mutliple languages (I haven't tested them all)
 
 Running
 -------
     ./navify
+    
+Usage
+-----
+- The '+' button adds a song
+- The folder button adds a playlist
+- the magnifying glass searches for a cached song
+- The pencil edits a song (both cached and local)
+- The 'N' button searches for recommended songs
+- The  '...' opens the settings
 
 Potential Updates
 -----------------
@@ -29,3 +39,8 @@ Potential Updates
 - Windows support
 - Local search
 - More settings
+
+Known Issues
+------------
+- The main window freezes when a subwindow is opened, but continues when the window is closed
+- If the theme is changed while the player is searching for recommended songs, the recommended button can be pressed again and will override the first search request
