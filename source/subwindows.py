@@ -538,6 +538,8 @@ def AddYou():
 				window2 = sg.Window(
 					"New Folder", 
 					layoutAdd2,
+					resizable=True,
+					force_toplevel = True,
 					background_color=background, 
 		  			button_color=accent,
 		   		   	font=defaultFont,
@@ -735,6 +737,8 @@ def Playlist(listed):
 				window2 = sg.Window(
 					"Create Playlist", 
 					layoutP2, 
+					force_toplevel = True,
+					resizable = True,
 					background_color=background, 
 					button_color=accent,
 					font=defaultFont,
@@ -769,6 +773,8 @@ def Playlist(listed):
 							window3 = sg.Window(
 								"Create Playlist",
 								layoutP3,
+								force_toplevel = True,
+								resizable=True,
 								background_color=background, 
 								button_color=accent,
 								font=defaultFont,
