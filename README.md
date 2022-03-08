@@ -50,6 +50,7 @@ Potential Updates
 - Local search
 - More settings
 - Pre-caching liked songs
+- Scrolling text for the 'Now Playing:' area
 
 Known Issues
 ------------
