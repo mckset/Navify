@@ -5,6 +5,7 @@ Requirements
 ------------
 - MPV
 - Youtube-dl
+- Python3
 - Socat
 - Spotify developer app - must be setup by the user (https://developer.spotify.com/documentation/web-api/quick-start/#:~:text=To%20do%20that%2C%20simply%20sign%20up%20at%20www.spotify.com.,complete%20your%20account%20set%20up.%20Register%20Your%20Application)
 
@@ -48,8 +49,14 @@ Potential Updates
 - Windows support
 - Local search
 - More settings
+- Pre-caching liked songs
 
 Known Issues
 ------------
+- Certain characters in the name of a song can crash the player when attempting to search it on YouTube
+- Songs with 10 seconds at the end of the time is shown as being X:010 (Fixed but it was not commited)
+- Songs with longer names resize certain windows past the display size
+- Leaving the search field empty when searching for Spotify songs crash the player
 - The main window freezes when a subwindow is opened, but continues when the window is closed
 - If the theme is changed while the player is searching for recommended songs, the recommended button can be pressed again and will override the first search request
+- Whenever the player crashes while a song is playing, the song continues to play until the end. (The song can be stopped by opening the player again, playing a song, and clicking the skip button a couple of times)
