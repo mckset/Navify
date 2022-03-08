@@ -20,10 +20,13 @@ Features
 - Ability to create and edit a playlist of both local and cached music
 - Supports mutliple languages (I haven't tested them all)
 
-Running
--------
-    ./navify
-    
+Installation and Running
+------------------------
+```
+git clone https://github.com/mckset/Navify.git
+./navify
+```
+
 Usage
 -----
 - The '+' button adds a song
