@@ -396,14 +396,17 @@ def ViewAllCondense(l1, l2):
 	for i in range(len(locPaths)):
 		if "\n" in locPaths[i]:
 			locPaths[i] = locPaths[i][0:len(locPaths[i])-1]
-
-	for i in range(len(locTracks)):
-		for x in range(len(ID)):
-			if locID[i] != ID[x]:
-				listed.append([locPaths[i], locTracks[i]])
-				ID.append(locID[i])
-				break
-
+	if len(ID) > 0:
+		for i in range(len(locTracks)):
+			for x in range(len(ID)):
+				if locID[i] != ID[x]:
+					listed.append([locPaths[i], locTracks[i]])
+					ID.append(locID[i])
+					break
+	else:
+		for i in range(len(locPaths)):
+			listed.append([locPaths[i], locTracks[i]])
+			ID.append(locID[i])
 	return tempList	
 
 def KillMPV():
