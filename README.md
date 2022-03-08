@@ -33,8 +33,14 @@ Usage
 - The 'N' button searches for recommended songs
 - The  '...' opens the settings
 
+Notes
+-----
+Navify creates and looks for files from the directory it is accessed from. If the program is accessed from a different folder than where the program is located, it will create and expect files like the 'icons' folder to be in that location. 
+
 Potential Updates
 -----------------
+- Ability to change fonts and font sizes
+- Ability to change the location for browsing local music files
 - Support to stream from Spotify
 - Windows support
 - Local search
