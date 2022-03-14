@@ -46,6 +46,7 @@ Updates
 - Added option to change font and font size (Webdings is supported I guess)
 - Added option to change the local music path
 - Added check to "resync" with playing songs left playing after the player crashes (Even though it shouldn't, it's just in case it does)
+- Added check to prevent multiple players from running at once 
 - Changed the way the player handles played events to be a bit faster (Still relies on internet speed for the most part)
 - Fixed previous button not not playing the previous song when shuffle is turned on
 - Fixed non-english characters crashing the player when adding songs (All languages have not been checked yet)
