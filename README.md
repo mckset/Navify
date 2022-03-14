@@ -19,7 +19,7 @@ Features
 - A list of local songs in your 'Music' folder to play
 - Settings to change the color scheme and volume of the player
 - Ability to create and edit a playlist of both local and cached music
-- Supports mutliple languages (I haven't tested them all)
+- Supports mutliple languages
 
 Installation and Running
 ------------------------
@@ -45,9 +45,10 @@ Updates
 -------
 - Added option to change font and font size (Webdings is supported I guess)
 - Added option to change the local music path
-- Added a check to prevent multiple players from running at once
+- Added check to "resync" with playing songs left playing after the player crashes (Even though it shouldn't, it's just in case it does)
+- Changed the way the player handles played events to be a bit faster (Still relies on internet speed for the most part)
 - Fixed previous button not not playing the previous song when shuffle is turned on
-- Fixed non-english characters crashing the player when adding songs
+- Fixed non-english characters crashing the player when adding songs (All languages have not been checked yet)
 - Fixed songs with 10 seconds at the end of the time being shown as X:010
 - Fixed playlist not properly listing or playing local songs and locally cached songs 
 - Fixed player crashing when attempting to search Spotify for a song with a blank input
