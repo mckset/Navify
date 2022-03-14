@@ -41,23 +41,30 @@ Notes
 -----
 Navify creates and looks for files from the directory it is accessed from. If the program is accessed from a different folder than where the program is located, it will create and expect files like the 'icons' folder to be in that location. 
 
+Updates
+-------
+- Added option to change font and font size (Webdings is supported I guess)
+- Added option to change the local music path
+- Added a check to prevent multiple players from running at once
+- Fixed previous button not not playing the previous song when shuffle is turned on
+- Fixed non-english characters crashing the player when adding songs
+- Fixed songs with 10 seconds at the end of the time being shown as X:010
+- Fixed playlist not properly listing or playing local songs and locally cached songs 
+- Fixed player crashing when attempting to search Spotify for a song with a blank input
+- Fixed problem where the recommended button could be pushed more than once, overriding the previous results
+- Fixed player crashes leaving songs still playing
+- Fixed not all text changing with theme color
+
 Potential Updates
 -----------------
-- Ability to change fonts and font sizes
-- Ability to change the location for browsing local music files
 - Support to stream from Spotify
-- Windows support
+- Windows support (maybe some day)
 - Local search
-- More settings
 - Pre-caching liked songs
 - Scrolling text for the 'Now Playing:' area
+- Getting Spotify's discover weekly playlist
 
 Known Issues
 ------------
-- Certain characters in the name of a song can crash the player when attempting to search it on YouTube
-- Songs with 10 seconds at the end of the time is shown as being X:010 (Fixed but it was not commited)
 - Songs with longer names resize certain windows past the display size
-- Leaving the search field empty when searching for Spotify songs crash the player
-- The main window freezes when a subwindow is opened, but continues when the window is closed
-- If the theme is changed while the player is searching for recommended songs, the recommended button can be pressed again and will override the first search request
-- Whenever the player crashes while a song is playing, the song continues to play until the end. (The song can be stopped by opening the player again, playing a song, and clicking the skip button a couple of times)
+- The main window freezes when a subwindow is opened, but continues when the window is closed (Prevents the player from going to the next song in the queue when open)
