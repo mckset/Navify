@@ -37,36 +37,38 @@ Usage
 - The 'N' button searches for recommended songs
 - The  '...' opens the settings
 
+Key Bindings
+------------
+- Space: pause/play
+- Up: volume up
+- Down: volume down
+- Left: seek -5 seconds 
+- Right: seek 5 seconds
+- '<' or ',': previous
+- '>' or '.': skip
+
 Notes
 -----
-Navify creates and looks for files from the directory it is accessed from. If the program is accessed from a different folder than where the program is located, it will create and expect files like the 'icons' folder to be in that location.
+- Navify creates and looks for files from the directory it is accessed from. If the program is accessed from a different folder than where the program is located, it will create and expect files like the 'icons' folder to be in that location.
+- If you plan to play songs with titles in different languages, you might need to change
 
 Updates
 -------
-- Added option to change font and font size (Webdings is supported I guess)
-- Added option to change the local music path
-- Added check to "resync" with playing songs left playing after the player crashes (Even though it shouldn't, it's just in case it does)
-- Added check to prevent multiple players from running at once 
-- Changed the way the player handles played events to be a bit faster (Still relies on internet speed for the most part)
-- Fixed previous button not not playing the previous song when shuffle is turned on
-- Fixed non-english characters crashing the player when adding songs (All languages have not been checked yet)
-- Fixed songs with 10 seconds at the end of the time being shown as X:010
-- Fixed playlist not properly listing or playing local songs and locally cached songs 
-- Fixed player crashing when attempting to search Spotify for a song with a blank input
-- Fixed problem where the recommended button could be pushed more than once, overriding the previous results
-- Fixed player crashes leaving songs still playing
-- Fixed not all text changing with theme color
+- The player now pre-caches liked songs
+- Text for the playing song now scrolls if there isn't enough room on the screen (adjustable in the theme window)
+- Reset the way the player handles play events (The other method broke on slower machines for some reason)
+- Removed check for another player running (It cause more problems than solved)
+- Added more keys as shortcuts
 
 Potential Updates
 -----------------
 - Support to stream from Spotify
 - Windows support (maybe some day)
 - Local search
-- Pre-caching liked songs
-- Scrolling text for the 'Now Playing:' area
 - Getting Spotify's discover weekly playlist
 
 Known Issues
 ------------
+- The XFCE desktop seems to have an issue with running the player if there isn't a font that supports the language
 - Songs with longer names resize certain windows past the display size
 - The main window freezes when a subwindow is opened, but continues when the window is closed (Prevents the player from going to the next song in the queue when open)
