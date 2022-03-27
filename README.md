@@ -11,7 +11,7 @@ Requirements
 
 The Actual Player
 -----------------
-![player](https://lh3.google.com/u/0/d/1k5ni8sHsKs6Ulftmyp9dW1ZtPKkrkyV4=w1904-h947-iv1)
+![player](https://1drv.ms/u/s!AmUq8Rl7UdBdlUogk-cvFVLsLwBr)
 
 Features
 --------
