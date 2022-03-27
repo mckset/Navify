@@ -11,7 +11,7 @@ Requirements
 
 The Actual Player
 -----------------
-![player](https://1drv.ms/u/s!AmUq8Rl7UdBdlUogk-cvFVLsLwBr)
+![player](https://github.com/mckset/Navify/blob/source/Navify.png)
 
 Features
 --------
