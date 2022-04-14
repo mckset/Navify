@@ -11,7 +11,7 @@ Requirements
 
 The Actual Player
 -----------------
-![player](https://github.com/mckset/Navify/blob/source/Navify.png)
+![alt text](https://lh3.google.com/u/0/d/1k5ni8sHsKs6Ulftmyp9dW1ZtPKkrkyV4=w1904-h947-iv1)
 
 Features
 --------
@@ -40,7 +40,7 @@ Usage
 - the magnifying glass searches for a cached song
 - The pencil edits a song (both cached and local)
 - The 'N' button searches for recommended songs
-- Right click the 'N' button to play the "Discover Weekly" playlist from Spotify
+- Right click the 'N' button to list playlists from Spotify
 - The  '...' opens the setting
 
 Key Bindings
@@ -59,37 +59,32 @@ Notes
 - If you plan on playing songs with titles in different languages, you might need install a font that supports it
 - The player checks for songs in your selected local folder and all folders in it. It is not recommended to select a folder with a large amount of files that are not music files as it will slow the player down.
 - The player only lists songs ending in .mp3, .wav, .ogg, and .mid. Other song formats are technically supported but, the player will not be able to find them. 
-- Navify requires a terminal at least for the setup process. Without it, Spotify might need an input before the player starts and the program will hang.
+- Navify requires a terminal at least for the setup process. Without it, Spotify might need an input before the player starts and the program will hang. 
 
 Updates
 -------
-- Made the player more stable over all
-- Set the player to try and play a song 3 times before skipping to the next in the queue (in case of a timeout)
-- Added a settings to edit songs that are blacklisted
-- Fixed problem that prevented the scrolling when searching through cached songs
-- Stopped the player from taking keyboard inputs for listed songs
-- Applied small optimization to retrieving cached song data
-- Added option to get discover weekly playlist
-- Fixed local songs not being able to be played after pushing the 'N' button. (If this happens anywhere else, clicking all on the local page should fix it)
-- Condensed code in various places
-- Added check to make sure the 'icons' folder is in the player directory
+- Added functionally to get playlists from Spotify
+- Fixed issue with blacklisting a song leaving a blank at the top of the player
+- Fixed issue where setting a cached songs location to a local file screwed up the songs name
+- Fixed other languages crashing the player (again)
+- Added Windows support (See windows branch, might be a bit buggy)
+- Fixed liked songs not being cached if there are more than 20 
+- Fixed Navify event returning errors preventing it from being used
+- Added input window for Spotify settings (Terminal no longer needed)
+- Changed skipping songs to be a bit faster
 
 Potential Updates
 -----------------
 - Support to stream from Spotify
-- Windows support (maybe some day)
 - Local search
 - Settings to change keyboard shortcut
-- A way to bring Spotify playlists to the player
 - Condensing source code to be faster
 
 Known Bugs
 ------------
-- The XFCE desktop seems to have an issue with running the player if there isn't a font that supports the language
 - Songs with longer names resize certain windows past the display size
-- When blacklisting a song, sometimes the player leaves a blank at the top of the listed songs and prevents all cached songs from playing. Restarting the player resolves the issue but it is unsure how it is caused at the moment.
 
 Known Issues
 ------------ 
-- The main window freezes when a subwindow is opened, but continues when the window is closed (Prevents the player from going to the next song in the queue when open)
+- The main window freezes when a subwindow is opened, but continues when the window is closed (Prevents the player from going to the next song in the queue when open). It is unable to be fixed at the moment (perhaps a different GUI kit would be better)
 - Sometimes that player will automatically grab a link to a full album instead of the song if the album has the same name
