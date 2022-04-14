@@ -1,12 +1,11 @@
-# Navify
-A music streaming software for Linux that uses Spotify's recommendations and streams it from Youtube. Streamed songs are then cached on the users PC for future access. Keep in mind, when a new song is added, Navify uses the **First** video that shows up on youtube when you search for the song and the artist. You may receive videos unrelated to the songs or of bad quality if the song is obscure. See the source branch for the source code.
+# Navify (For Windows)
+A Windows port of Navify that uses Spotify's recommendations and streams it from Youtube. Streamed songs are then cached on the users PC for future access. Keep in mind, when a new song is added, Navify uses the **First** video that shows up on youtube when you search for the song and the artist. You may receive videos unrelated to the songs or of bad quality if the song is obscure. See the source branch for the source code.
 
 Requirements
 ------------
 - MPV
 - Youtube-dl
 - Python3
-- Socat
 - Spotify developer app - must be setup by the user (https://developer.spotify.com/documentation/web-api/quick-start/#:~:text=To%20do%20that%2C%20simply%20sign%20up%20at%20www.spotify.com.,complete%20your%20account%20set%20up.%20Register%20Your%20Application)
 
 The Actual Player
@@ -28,10 +27,12 @@ Features
 
 Installation and Running
 ------------------------
+Download the zip file and run
+
 ```
-git clone https://github.com/mckset/Navify.git
-./navify
+python -Xuft8 navify.py
 ```
+from the command prompt. The -Xutf8 flag must be used if you plan to play songs with titles from a different language. Without it, the player crashes.
 
 Usage
 -----
@@ -56,10 +57,9 @@ Key Bindings
 Notes
 -----
 - Navify creates and looks for files from the directory it is accessed from. If the program is accessed from a different folder than where the program is located, it will create and expect files like the 'icons' folder to be in that location.
-- If you plan on playing songs with titles in different languages, you might need install a font that supports it
 - The player checks for songs in your selected local folder and all folders in it. It is not recommended to select a folder with a large amount of files that are not music files as it will slow the player down.
 - The player only lists songs ending in .mp3, .wav, .ogg, and .mid. Other song formats are technically supported but, the player will not be able to find them. 
-- Navify requires a terminal at least for the setup process. Without it, Spotify might need an input before the player starts and the program will hang. 
+- The Windows build is very new and might have multiple bugs that have not been discovered yet
 
 Updates
 -------
