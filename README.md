@@ -1,5 +1,5 @@
 # Navify
-A music streaming software for Linux (See Windows branch for a Windows version) that uses Spotify's recommendations and streams it from Youtube. Streamed songs are then cached on the users PC for future access. Keep in mind, when a new song is added, Navify uses the **First** video that shows up on youtube when you search for the song and the artist. You may receive videos unrelated to the songs or of bad quality if the song is obscure. See the source branch for the source code.
+A music streaming software for Linux (See Windows branch for a Windows version) that uses Spotify's recommendations and streams it from Youtube. Streamed songs are then cached on the users PC for future access. Keep in mind, when a new song is added, Navify uses the **First** video that shows up on youtube when you search for the song and the artist. You may receive videos unrelated to the songs or of bad quality if the song is obscure (Use the edit button to change the URL if this happens).
 
 Requirements
 ------------
@@ -18,13 +18,12 @@ Features
 - Grab a list of recommended songs from Spotify based off of your choice of liked songs (up to 5 can be picked to filter recommendations)
 - Play songs from either YouTube or your local music folder
 - Caches songs from Spotify to save time searching for them again (~75 bytes per song)
-- Ability to edit cached songs names and where the player looks to play the song (YouTube or the path to the song on your PC)
-- Ability to add songs from YouTube
+- Ability to edit cached songs names and where the player looks to play the song (Can be a YouTube link or a path to the song on your PC)
+- Ability to add songs from YouTube to a local cache
 - A list of local songs from any folder of your choice to play (~/Music is the default)
-- Settings to change the color scheme and volume of the player
-- Ability to create and edit a playlist of both local and cached music
-- Setting to edit blacklisted songs
-- Supports mutliple languages
+- Settings to change the color scheme of the player
+- Ability to create and edit a playlist of both local and cached music, inluding music files
+- Support for mutliple languages
 
 Installation and Running
 ------------------------
