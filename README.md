@@ -23,13 +23,12 @@ Features
 - Grab a list of recommended songs from Spotify based off of your choice of liked songs (up to 5 can be picked to filter recommendations)
 - Play songs from either YouTube or your local music folder
 - Caches songs from Spotify to save time searching for them again (~75 bytes per song)
-- Ability to edit cached songs names and where the player looks to play the song (YouTube or the path to the song on your PC)
+- Ability to edit cached songs names and where the player looks to play the song (Can be a YouTube link or a path to the song on your PC)
 - Ability to add songs from YouTube
-- A list of local songs from any folder of your choice to play (~/Music is the default)
-- Settings to change the color scheme and volume of the player
+- A list of local songs from any folder of your choice to play (~\Music is the default)
+- Settings to change the color scheme
 - Ability to create and edit a playlist of both local and cached music
-- Setting to edit blacklisted songs
-- Supports mutliple languages (see known bugs and notes)
+- Support for mutliple languages
 
 Installation and Running
 ------------------------
