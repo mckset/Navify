@@ -8,6 +8,12 @@ Requirements
 - Python3
 - Spotify developer app - must be setup by the user (https://developer.spotify.com/documentation/web-api/quick-start/#:~:text=To%20do%20that%2C%20simply%20sign%20up%20at%20www.spotify.com.,complete%20your%20account%20set%20up.%20Register%20Your%20Application)
 
+Python Dependencies (Install with PIP)
+--------------------------------------
+- Pillow
+- PySimpleGUI
+- Spotipy
+
 The Actual Player
 -----------------
 ![alt text](https://github.com/mckset/Navify/blob/source/Navify.png)
