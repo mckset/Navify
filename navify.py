@@ -55,7 +55,7 @@ likes=[] # List of Liked Songs
 home=os.path.expanduser('~')
 playerHome=os. getcwd() + "\\" # Location of python script
 localMusic = home + "\\Music"
-mpvLoc='C:\\Users\\seth\\Documents'
+mpvLoc=''
 
 localMain=["ALL", "LOCAL CACHE","MUSIC"] # The Main Screen for the Local Section
 
@@ -80,6 +80,7 @@ def SetupSettings():
 	global smallFont
 	global localMusic
 	global scroll
+	global mpvLoc
 
 	err=""
 	if not exists(playerHome + "icons"):
@@ -127,14 +128,58 @@ def SetupSettings():
 		pickle.dump([foreground, background, textc, highlight, accent, "#67778f", alpha, "Mono", "20", "16", "13"], open(playerHome + "theme.pkl", 'wb'))
 
 	if not exists(playerHome + "settings.pkl"):
-		pickle.dump([100, 1, home + "\\Music"], open(playerHome + "settings.pkl", 'wb'))
+		pickle.dump([100, 1, home + "\\Music", ""], open(playerHome + "settings.pkl", 'wb'))
 	if not exists(localMusic):
 		print("WARNING: " + home + "\\Music does not exist. Please enter the path to local songs in the settings menu") 
 
 	settings = pickle.load(open(playerHome + "settings.pkl", 'rb'))
+
+	while not exists(settings[3] + "\\mpv.exe"):	
+		setWindow = sg.Window("Enter Path to MPV", 
+		  layout = [[sg.Text("Location of MPV", text_color=textc, background_color=background,  expand_x=True),sg.Input(default_text=settings[3], text_color=textc, background_color=foreground, disabled_readonly_background_color = highlight, enable_events=True, size=(25,1), focus=True, border_width=0, expand_x=True, key="-SMPV-")],[sg.Button("Submit", enable_events=True, mouseover_colors=hover, border_width=0, key="-SSUBMIT-", expand_x=True)]], 
+		    background_color=background, 
+ 		   	button_color=accent,
+			resizable=True,
+   		   	font=defaultFont,
+		   	text_justification="left"
+		  	)
+		while True:
+			event, values = setWindow.read()
+			
+			if event == sg.WIN_CLOSED:
+				setWindow.close()
+				sys.exit()
+			if event == "-SSUBMIT-":    
+				setWindow.close()
+				break
+			settings[3] = values["-SMPV-"]
+		if settings[3][len(settings[3])-1] == "\\":
+			settings[3] = settings[3][0:len(settings[3])-1]
+		pickle.dump(settings, open(playerHome + "settings.pkl", 'wb'))
+	mpvLoc=settings[3]
 	localMusic = settings[2]
 
-SetupSettings()
+SetupSettings()	
+e=0
+def setupLayout():
+	layout = [
+		[
+		sg.Text("Spotify Client ID:", text_color=textc, background_color=background,  expand_x=True),
+		sg.Input(default_text=key[0], text_color=textc, background_color=foreground, disabled_readonly_background_color = highlight, enable_events=True, size=(25,1), focus=True, border_width=0, expand_x=True, key="-SCID-")
+		],
+		[
+		sg.Text("Spotify Client Secret Key:", text_color=textc, background_color=background,  expand_x=True),
+		sg.Input(default_text=key[1], text_color=textc, background_color=foreground, disabled_readonly_background_color = highlight, enable_events=True, size=(25,1), focus=True, border_width=0, expand_x=True, key="-SSID-")
+		],
+		[
+		sg.Text("Spotify Redirect URI:", text_color=textc, background_color=background,  expand_x=True),
+		sg.Input(default_text=key[2], text_color=textc, background_color=foreground, disabled_readonly_background_color = highlight, enable_events=True, size=(25,1), focus=True, border_width=0, expand_x=True, key="-SRURI-")
+		],
+		[
+		sg.Button("Submit", enable_events=True, mouseover_colors=hover, border_width=0, key="-SSUBMIT-", expand_x=True)
+		]
+	]
+	return layout
 
 def LoadSpotify():
 	global sp
