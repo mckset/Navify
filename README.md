@@ -11,7 +11,7 @@ Requirements
 
 The Actual Player
 -----------------
-![alt text](https://lh3.google.com/u/0/d/1k5ni8sHsKs6Ulftmyp9dW1ZtPKkrkyV4=w1904-h947-iv1)
+![alt text](https://github.com/mckset/Navify/blob/source/Navify.png)
 
 Features
 --------
@@ -24,7 +24,7 @@ Features
 - Settings to change the color scheme and volume of the player
 - Ability to create and edit a playlist of both local and cached music
 - Setting to edit blacklisted songs
-- Supports mutliple languages (see known bugs and notes)
+- Supports mutliple languages
 
 Installation and Running
 ------------------------
@@ -59,7 +59,6 @@ Notes
 - If you plan on playing songs with titles in different languages, you might need install a font that supports it
 - The player checks for songs in your selected local folder and all folders in it. It is not recommended to select a folder with a large amount of files that are not music files as it will slow the player down.
 - The player only lists songs ending in .mp3, .wav, .ogg, and .mid. Other song formats are technically supported but, the player will not be able to find them. 
-- Navify requires a terminal at least for the setup process. Without it, Spotify might need an input before the player starts and the program will hang. 
 
 Updates
 -------
