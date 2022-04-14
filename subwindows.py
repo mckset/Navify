@@ -3,6 +3,7 @@ import pickle
 import subprocess
 import os
 import sys
+import webbrowser
 
 from os.path import exists
 from os import walk
@@ -567,7 +568,7 @@ def AddSpot(sp):
 					name=video[i]
 					content=text[i]
 		if event == "-AOPEN-":
-			subprocess.run(["gio", "open", selectedLink])
+			webbrowser.open(selectedLink)
 
 		if event == "-ASUBMIT-":
 			window.close()
@@ -743,7 +744,7 @@ def AddYou():
 
 
 		if event == "-AOPEN-":
-			subprocess.run(["gio", "open", selected])
+			webbrowser.open(selected)
 
 		if len(name) > 0 and len(sfolder) > 0:
 			window["-ASUBMIT-"].update(disabled=False)
@@ -808,8 +809,7 @@ def Edit(name, link, ID, t):
 			tempLink = values["-ELINK-"]	
 
 		if event == "-EOPEN-":
-			subprocess.run(["gio", "open", link])
-
+			webbrowser.open(link)
 		if event == "-ESUBMIT-":
 			if tempName != name or tempLink != link:
 				if t == 0:
