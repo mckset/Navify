@@ -8,13 +8,7 @@ Requirements
 - python3
 - socat
 - Spotify developer app - must be setup by the user (https://developer.spotify.com/documentation/general/guides/authorization/app-settings/)
-
-Additional Requirements (If you want to run the source code)
-------------------------------------------------------------
-- Spotipy
-- Pillow
-- PySimpleGUI
-
+- 
 Installation and Running
 ------------------------
 ```
