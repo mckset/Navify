@@ -15,6 +15,14 @@ Additional Requirements (If you want to run the source code)
 - Pillow
 - PySimpleGUI
 
+Installation and Running
+------------------------
+```
+git clone --branch *Arch/Ubuntu* https://github.com/mckset/Navify.git
+cd Navify
+./navify
+```
+
 The Actual Player
 -----------------
 ![alt text](https://github.com/mckset/Navify/blob/main/Navify.png)
@@ -32,14 +40,6 @@ Features
 - Support for mutliple languages
 - Play YouTube livestreams 
 - Manually cache songs via Spotify or YouTube (YouTube cache is stored in the Local Cache folder)
-
-Installation and Running
-------------------------
-```
-git clone --branch *Arch/Ubuntu* https://github.com/mckset/Navify.git
-cd Navify
-./navify
-```
 
 Usage
 -----
