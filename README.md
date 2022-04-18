@@ -11,7 +11,7 @@ Requirements
 
 The Actual Player
 -----------------
-![alt text](https://github.com/mckset/Navify/Navify.png)
+![alt text](https://github.com/mckset/Navify/blob/main/Navify.png)
 
 Features
 --------
