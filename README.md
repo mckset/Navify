@@ -9,6 +9,12 @@ Requirements
 - socat
 - Spotify developer app - must be setup by the user (https://developer.spotify.com/documentation/general/guides/authorization/app-settings/)
 
+Additional Requirements (If you want to run the source code)
+------------------------------------------------------------
+- Spotipy
+- Pillow
+- PySimpleGUI
+
 The Actual Player
 -----------------
 ![alt text](https://github.com/mckset/Navify/blob/main/Navify.png)
