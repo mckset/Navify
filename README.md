@@ -9,9 +9,23 @@ Requirements
 - socat
 - Spotify developer app - must be setup by the user (https://developer.spotify.com/documentation/general/guides/authorization/app-settings/)
 
+Additional Requirements (If you want to run the source code)
+------------------------------------------------------------
+- Spotipy
+- Pillow
+- PySimpleGUI
+
+Installation and Running
+------------------------
+```
+git clone --branch Arch https://github.com/mckset/Navify.git
+cd Navify
+./navify
+```
+
 The Actual Player
 -----------------
-![alt text](https://github.com/mckset/Navify/blob/source/Navify.png)
+![alt text](https://github.com/mckset/Navify/blob/main/Navify.png)
 
 Features
 --------
@@ -26,14 +40,6 @@ Features
 - Support for mutliple languages
 - Play YouTube livestreams 
 - Manually cache songs via Spotify or YouTube (YouTube cache is stored in the Local Cache folder)
-
-Installation and Running
-------------------------
-```
-git clone --branch *Arch/Ubuntu* https://github.com/mckset/Navify.git
-cd Navify
-./navify
-```
 
 Usage
 -----
