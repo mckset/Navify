@@ -8,7 +8,7 @@ Requirements
 - python3
 - socat
 - Spotify developer app - must be setup by the user (https://developer.spotify.com/documentation/general/guides/authorization/app-settings/)
-- 
+
 Installation and Running
 ------------------------
 ```
