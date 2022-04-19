@@ -1072,7 +1072,7 @@ def Player():
 					window["-SONGS-"].update(values=spotList)
 
 		# QUEUE Event
-		if event == "-QUEUE-" and len(values["-QUEUE-"]) > 1:
+		if event == "-QUEUE-" and len(values["-QUEUE-"]) > 0:
 			if values["-QUEUE-"][0] == "[CLEAR]":
 				if repeat==True:
 					for i in range(1,len(queue)):
