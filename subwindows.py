@@ -192,8 +192,74 @@ def AddLayoutYou(folders):
 	]
 	return layoutAdd
 
-def EditLayout(name, link):
-	layoutEdit = [
+def EditLayoutCache(name, artist, link, date, dur, st, et, vol, pc, img):
+	m=str(int(int(dur)/60000))
+	s=str(int(int(dur)/1000)-int(int(dur)/60000)*60)
+	if len(s) == 1:
+		s="0" + s
+	dur=m+":"+s
+	Img = [[
+		sg.Image(source=img, background_color=background,size=(384,384), expand_x=True) # Thumbnail	
+		]]
+	Stats = [
+		[
+		sg.Text("Name: ", text_color=textc, background_color=background),
+		sg.Input(name, text_color=textc, background_color=foreground, enable_events=True, size=(25,1), focus=True, border_width=0, expand_x=True, key="-ENAME-")
+		],
+		[
+		sg.Text("Artist: ", text_color=textc, background_color=background),
+		sg.Input(artist, text_color=textc, background_color=foreground, enable_events=True, size=(25,1), focus=True, border_width=0, expand_x=True, key="-EARTIST-")
+		],
+		[
+		sg.Text("URL: ", text_color=textc, background_color=background),
+		sg.Input(link, text_color=textc, background_color=foreground, enable_events=True, size=(25,1), focus=True, border_width=0, expand_x=True, key="-ELINK-")
+		],
+		[
+		sg.Text("Start Time: ", text_color=textc, background_color=background),
+		sg.Input(st, text_color=textc, background_color=foreground, enable_events=True, size=(25,1), focus=True, border_width=0, expand_x=True, key="-EST-")
+		],
+		[
+		sg.Text("End Time (0 = full length): ", text_color=textc, background_color=background),
+		sg.Input(et, text_color=textc, background_color=foreground, enable_events=True, size=(25,1), focus=True, border_width=0, expand_x=True, key="-EET-")
+		],
+		[
+		sg.Text("Volume Offset (%): ", text_color=textc, background_color=background),
+		sg.Slider(range=(0,200), default_value=vol, enable_events=True, background_color=background, trough_color=foreground, orientation='h', border_width = 1, expand_x=True, key="-EVOL-")
+		],
+		[
+		sg.Button("Cancel", button_color=foreground, mouseover_colors=hover, border_width=0, expand_x=True, enable_events=True, key="-ECANCEL-"),
+		sg.Button("Delete", button_color=foreground, mouseover_colors=hover, border_width=0, expand_x=True, enable_events=True, key="-EDEL-"),
+		sg.Button("Open", button_color=foreground, mouseover_colors=hover, border_width=0, expand_x=True, enable_events=True, key="-EOPEN-"),
+		sg.Button("Submit", button_color=foreground, mouseover_colors=hover, border_width=0, expand_x=True, enable_events=True, key="-ESUBMIT-")		
+		
+		],
+		[
+		sg.Text("Released: " + date, text_color=textc, background_color=background),
+		sg.Text("Duration: " + dur, text_color=textc, background_color=background),
+		sg.Text("Times Played: " + pc, text_color=textc, background_color=background)
+		]
+	]
+	if len(img) != 0:
+		layoutEdit = [
+		[
+			sg.Column(Img, expand_y=True,background_color=background,  expand_x=True), #IMG
+			sg.VSeparator(color=foreground),
+			sg.Column(Stats, expand_y=True,background_color=background,  expand_x=True), # Stats
+		]
+		]
+	else:
+		layoutEdit = [
+		[
+			sg.Column(Stats, expand_y=True,background_color=background,  expand_x=True), # Stats
+		]
+		]
+	return layoutEdit
+
+def EditLayout(name, link, st, et, vol, pc, img):
+	Img = [[
+		sg.Image(source=img, background_color=background,size=(384,384), expand_x=True) # Thumbnail	
+		]]
+	Stats = [
 		[
 		sg.Text("Name: ", text_color=textc, background_color=background),
 		sg.Input(name, text_color=textc, background_color=foreground, enable_events=True, size=(25,1), focus=True, border_width=0, expand_x=True, key="-ENAME-")
@@ -203,14 +269,42 @@ def EditLayout(name, link):
 		sg.Input(link, text_color=textc, background_color=foreground, enable_events=True, size=(25,1), focus=True, border_width=0, expand_x=True, key="-ELINK-")
 		],
 		[
+		sg.Text("Start Time: ", text_color=textc, background_color=background),
+		sg.Input(st, text_color=textc, background_color=foreground, enable_events=True, size=(25,1), focus=True, border_width=0, expand_x=True, key="-EST-")
+		],
+		[
+		sg.Text("End Time (0 = full length): ", text_color=textc, background_color=background),
+		sg.Input(et, text_color=textc, background_color=foreground, enable_events=True, size=(25,1), focus=True, border_width=0, expand_x=True, key="-EET-")
+		],
+		[
+		sg.Text("Volume Offset (%): ", text_color=textc, background_color=background),
+		sg.Slider(range=(0,200), default_value=vol, enable_events=True, background_color=background, trough_color=foreground, orientation='h', border_width = 1, expand_x=True, key="-EVOL-")
+		],
+		[
 		sg.Button("Cancel", button_color=foreground, mouseover_colors=hover, border_width=0, expand_x=True, enable_events=True, key="-ECANCEL-"),
+		sg.Button("Delete", button_color=foreground, mouseover_colors=hover, border_width=0, expand_x=True, enable_events=True, key="-EDEL-"),
 		sg.Button("Open", button_color=foreground, mouseover_colors=hover, border_width=0, expand_x=True, enable_events=True, key="-EOPEN-"),
 		sg.Button("Submit", button_color=foreground, mouseover_colors=hover, border_width=0, expand_x=True, enable_events=True, key="-ESUBMIT-")		
-		
+		],
+		[
+		sg.Text("Times Played: " + pc, text_color=textc, background_color=background)
 		]
 	]
+	if len(img) != 0:
+		layoutEdit = [
+		[
+			sg.Column(Img, expand_y=True,background_color=background,  expand_x=True), #IMG
+			sg.VSeparator(color=foreground),
+			sg.Column(Stats, expand_y=True,background_color=background,  expand_x=True), # Stats
+		]
+		]
+	else:
+		layoutEdit = [
+		[
+			sg.Column(Stats, expand_y=True,background_color=background,  expand_x=True), # Stats
+		]
+		]
 	return layoutEdit
-
 def EditLayoutLocal(name):
 	layoutEdit = [
 		[
@@ -218,6 +312,7 @@ def EditLayoutLocal(name):
 		sg.Input(name, text_color=textc, background_color=foreground, enable_events=True, size=(25,1), focus=True, border_width=0, expand_x=True, key="-ENAME-")
 		],
 		[
+		sg.Button("Delete", button_color=foreground, mouseover_colors=hover, border_width=0, expand_x=True, enable_events=True, key="-EDEL-"),
 		sg.Button("Cancel", button_color=foreground, mouseover_colors=hover, border_width=0, expand_x=True, enable_events=True, key="-ECANCEL-"),
 		sg.Button("Submit", button_color=foreground, mouseover_colors=hover, border_width=0, expand_x=True, enable_events=True, key="-ESUBMIT-")		
 		
@@ -345,9 +440,9 @@ def Blacklist():
    	# Lists tracks in the Cache folder (Spotify Cache)
 	tempID=next(walk(home + "blacklist/"), (None, None, []))[2]
 	for i in range(len(tempID)):
-		currentFile = subprocess.Popen(["cat", home + "blacklist/" + tempID[i]], stdout=subprocess.PIPE, text=True).communicate()[0]
-		prevListed.append((currentFile[44:]))
-		sortListed.append((currentFile[44:]).upper())
+		f = open (home + "blacklist/" + tempID[i], encoding="utf-8").readlines(0)
+		prevListed.append(str(f[1][0:len(f[1])-1] + " - " + f[2]))
+		sortListed.append(str(f[1][0:len(f[1])-1] + " - " + f[2]).upper())
 		sortID.append(tempID[i])
 
 	# Removes 'The' from the beginning of tracks to better sort
@@ -406,7 +501,7 @@ def Blacklist():
 		if event == "-BSUBMIT-":    
 			window.close()
 			for i in range(len(selID)):
-				os.system("mv " + home + "blacklist/" + selID[i] + " " + home + "cache")
+				os.system("mv " + home + "blacklist/" + selID[i] + " " + home + "cache/")
 			break
 
 		if event == "-BBL-":
@@ -483,6 +578,8 @@ def AddSpot(sp):
 		   	border_depth=None
 		  	)
 	tracks=[]
+	artists=[]
+	names=[]
 	ids=[]
 	selected=""
 	selectedID=""
@@ -501,12 +598,17 @@ def AddSpot(sp):
 			window["-ASRESULTS-"].update(values=tracks, disabled=True)
 			window["-ASEL-"].update(disabled=True)
 			tracks=[]
+			names=[]
+			artists=[]
 			ids=[]
 			try:
 				results = sp.search(q=search, limit=25)
 				for i in range(len(results['tracks']['items'])):
 					tracks.append(str(results['tracks']['items'][i]['name']) + ' - ' + str(results['tracks']['items'][i]['artists'][0]['name']))
 					ids.append(results['tracks']['items'][i]['id'])
+					names.append(str(results['tracks']['items'][i]['name']))
+					artists.append(str(results['tracks']['items'][i]['artists'][0]['name']))
+
 				window["-ASRESULTS-"].update(values=tracks, disabled=False)
 				selected=""
 				selectedID=""
@@ -517,7 +619,7 @@ def AddSpot(sp):
 			window["-ASEL-"].update(disabled=False)
 			for i in range(len(tracks)):
 				if tracks[i] == values["-ASRESULTS-"][0]:
-					selected=tracks[i]
+					selected=names[i] + '\n' + artists[i]
 					selectedID=ids[i]
 
 		if event == "-ASEL-":
@@ -589,7 +691,9 @@ def AddSpot(sp):
 		if event == "-ASUBMIT-":
 			window.close()
 			f = open(home + "cache/" + selectedID, 'w', encoding="utf-8")
-			f.write(selectedLink + "\n" + selected)
+			date=sp.track(selectedID)['album']['release_date']
+			dur=str(sp.track(selectedID)['duration_ms'])
+			f.write(selectedLink + "\n" + selected + '\n' + date + '\n' + dur + '\n0\n0\n100\n0\n' + sp.track(selectedID)['album']['images'][0]['url'])
 			f.close()
 			break
 		
@@ -683,7 +787,7 @@ def AddYou():
 			name=search
 
 		if event == "-ANAME-":
-			content=values["-ANAME-"]
+			content=values["-ANAME-"]+ '\n0\n0\n100\n0'
 
 		# Updates the name field to match the title and adds a thumbnail
 		if event == "-ARESULTS-":
@@ -700,7 +804,7 @@ def AddYou():
 					window["-AIMAGE-"].update(data=png_data, size=(256,192), subsample=2)        
 					window["-ANAME-"].update(text[i])
 					name=video[i]
-					content=text[i]
+					content=text[i] + '\n0\n0\n100\n0'
 
 		if event == "-ACREATE-":
 			if values["-ACREATE-"][0] != "---create new folder---":
@@ -784,10 +888,71 @@ def AddYou():
 	return True
 
 def Edit(name, link, ID, t):
-	if t != 2:
+	artist=""
+	sTime=0
+	eTime=0
+	vol=100
+	playC=0
+	img=''
+	if t == 0:
+		f = open(home + "cache/" + ID, encoding="utf-8").readlines(0)
+		name = f[1][0:len(f[1])-1]
+		artist = f[2][0:len(f[2])-1]
+		date=f[3][0:len(f[3])-1]
+		dur=f[4]
+		sTime=f[5][0:len(f[5])-1]
+		eTime=f[6][0:len(f[6])-1]
+		vol=f[7]
+		playC=f[8][0:len(f[8])-1]
+		img=f[9]
+		
+		try:
+			if not '\n' in f[9]:
+				response = requests.get(f[9])   
+			else:
+				 response = requests.get(f[9][0:len(f[9])-1])   
+			pil_image = Image.open(io.BytesIO(response.content))
+			pil_image = pil_image.resize((384,384), resample=0)
+			png_bio = io.BytesIO()
+			pil_image.save(png_bio, format="PNG")
+			png_data = png_bio.getvalue()
+			response.raw.decode_content = True
+		except:
+			png_data=''
 		window = sg.Window(
 				"Edit Song", 
-				EditLayout(name, link), 
+				EditLayoutCache(name, artist, link, date, dur, sTime, eTime, vol, playC, png_data), 
+				resizable=True,
+				force_toplevel = True,
+			  	background_color=background, 
+	 		   	button_color=accent,
+	   		   	font=defaultFont,
+			   	text_justification="left",
+			   	border_depth=None
+			  	)
+		
+	elif t == 1:
+		f = open(ID, encoding="utf-8").readlines(0)
+		name = f[0][0:len(f[0])-1]
+		sTime=f[1][0:len(f[1])-1]
+		eTime=f[2][0:len(f[2])-1]
+		vol=f[3]
+		playC=f[4][0:len(f[4])-1]
+		img="https://i.ytimg.com/vi/" + ID[len(ID)-11:] +"/hqdefault.jpg"
+		
+		try:  
+			response = requests.get(img)
+			pil_image = Image.open(io.BytesIO(response.content))
+			pil_image = pil_image.resize((384,384), resample=0)
+			png_bio = io.BytesIO()
+			pil_image.save(png_bio, format="PNG")
+			png_data = png_bio.getvalue()
+			response.raw.decode_content = True
+		except:
+			png_data=''
+		window = sg.Window(
+				"Edit Song", 
+				EditLayout(name, link, sTime, eTime, vol, playC, png_data), 
 				resizable=True,
 				force_toplevel = True,
 			  	background_color=background, 
@@ -808,51 +973,103 @@ def Edit(name, link, ID, t):
 		   	text_justification="left",
 		   	border_depth=None
 		  	)
+		
 	tempName=name
-	tempLink=link
+	if t == 0 or t == 1:
+		tempLink=link
+		tempST=sTime
+		tempET=eTime
+		tempVol=vol
+	if t == 0:
+		tempArtist=artist
+	try:
+		cName = subprocess.check_output(('socat', '-', '/tmp/mpvsocket'), stdin=subprocess.Popen(('echo', '{"command": ["get_property", "title"]}'), stdout=subprocess.PIPE).stdout, text=True)
+	except:
+		cName=''
+	for i in range(len(cName[8:])):
+		if cName[i:i+2] == '\",':
+			cName=cName[9:i]
+	settings = pickle.load(open(home + 'settings.pkl', 'rb'))
 	while True:
 		event, values = window.read()
 
 		if event == "-ECANCEL-" or event == sg.WIN_CLOSED:
 			window.close()
 			return 0;
-			break	
 
-		if event == "-ENAME-":
-			tempName = values["-ENAME-"]
+		if event == "-EDEL-":
+			window2 = sg.Window(
+				"Are You Sure?", 
+				[[sg.Text("Are you sure? ", text_color=textc, background_color=background, expand_x=True),],[sg.Button("Cancel", button_color=foreground, mouseover_colors=hover, border_width=0, expand_x=True, enable_events=True, key="-E2CAN-"),sg.Button("Delete", button_color=foreground, mouseover_colors=hover, border_width=0, expand_x=True, enable_events=True, key="-E2DEL-")]],
+				resizable=True, 
+				force_toplevel = True,
+			  	background_color=background, 
+	 		   	button_color=accent,
+	   		   	font=defaultFont,
+			   	text_justification="left",
+			   	border_depth=None
+		  	)
+			while True:
+				event2, values2 = window2.read()
 
-		if event == "-ELINK-":
+				if event2 == "-E2CAN-" or event2 == sg.WIN_CLOSED:
+					window2.close()
+					break	
+			
+				if event2 == "-E2DEL-":
+					if t == 0:
+						os.system("rm "+ home + "cache/\'" + ID + "\'")
+					if t == 1:
+						os.system("rm \'" + ID + "\'")
+					if t == 2:
+						os.system("rm \'" + ID + "\'")
+					window2.close()
+					window.close()
+					return 2;
+	
+		tempName = values["-ENAME-"]
+		if t == 0:
+			tempArtist = values["-EARTIST-"]
+		if t == 1 or t == 0:
 			tempLink = values["-ELINK-"]	
+			tempST=values["-EST-"]	
+			tempET=values["-EET-"]	
+			tempVol=values["-EVOL-"]
+
+		if event == "-EVOL-" and (cName == name + " - " + artist or cName == name):
+			vol=settings[0]*(values["-EVOL-"]/100)
+			subprocess.check_output(('socat', '-', '/tmp/mpvsocket'), stdin=subprocess.Popen(('echo', '{"command": ["set_property", "volume", '+ str(vol) +']}'), stdout=subprocess.PIPE).stdout)
 
 		if event == "-EOPEN-":
 			subprocess.run(["gio", "open", link])
 
 		if event == "-ESUBMIT-":
-			if tempName != name or tempLink != link:
-				if t == 0:
-					f = open(home + "cache/" + ID, 'w', encoding="utf-8")
-					f.write(tempLink + "\n" + tempName)
-					f.close()
-				if t == 1:
-					tempLink = tempLink[len(tempLink)-11:]
-					if not tempLink in ID[len(ID)-11:]:
-						os.remove(ID)
-						ID=ID[0:len(ID)-11] + tempLink
-					f = open(ID, 'w', encoding="utf-8")
-					f.write(tempName)
-					f.close()
-				if t == 2:
-					path=""
-					for i in range(len(ID)-1):
-						if '/' in ID[len(ID)- i - 1: len(ID)-i]:
-							path=ID[0:len(ID)-i]
-							break
-					oldName=name+link[len(link)-4:]
-					newName = tempName + link[len(link)-4:]
-					subprocess.run(["mv", path + oldName, path + newName])
-				window.close()
-				return 1;
-				break
+			if t == 0:
+				f=open(home + "cache/" + ID, 'r', encoding="utf-8").readlines(0)
+				img=f[9]
+				f = open(home + "cache/" + ID, 'w', encoding="utf-8")
+				f.write(tempLink + "\n" + tempName + '\n' + tempArtist + '\n' + date + '\n' + dur + tempST + '\n' + tempET + '\n' + str(tempVol) + '\n' + playC + '\n' + img)
+				f.close()
+			if t == 1:
+				tempLink = tempLink[len(tempLink)-11:]
+				if not tempLink in ID[len(ID)-11:]:
+					os.remove(ID)
+					ID=ID[0:len(ID)-11] + tempLink
+				f = open(ID, 'w', encoding="utf-8")
+				f.write(tempName + '\n' + tempST + '\n' + tempET + '\n' + str(tempVol) + '\n' + playC)
+				f.close()
+			if t == 2:
+				path=""
+				for i in range(len(ID)-1):
+					if '/' in ID[len(ID)- i - 1: len(ID)-i]:
+						path=ID[0:len(ID)-i]
+						break
+				oldName=name+link[len(link)-4:]
+				newName = tempName + link[len(link)-4:]
+				subprocess.run(["mv", path + oldName, path + newName])
+			window.close()
+			return 1;
+			break
 
 def Playlist(listed):
 	files=["---create new---"]
@@ -901,10 +1118,8 @@ def Playlist(listed):
 			break	
 
 		edit=False
-		if event == "-PEDIT-" and len(playlist) > 0:
+		if event == "-PEDIT-" and len(playlist) > 0 and values["-PPLAYLISTS-"][0] != "---create new---":
 			edit = True
-			for i in range(len(selected)):
-				selected[i] = str(i) + ": " + selected[i]			
 
 		if event == "-PPLAYLISTS-" or edit == True:
 			if edit == False:
@@ -956,20 +1171,20 @@ def Playlist(listed):
 					event2, values2 = window2.read()
 					if event2 == "-PSONGS2-" and values2["-PSONGS2-"][0] != "[LOCAL TRACKS]" and len(values2["-PSONGS2-"][0]) > 0:
 						valid=1						
-						selected.append(str(len(selected)) + ": " + values2["-PSONGS2-"][0])
-						selectedPaths.append(songsPaths[window2["-PSONGS2-"].get_indexes()[0]])
-
+						selected.append(values2["-PSONGS2-"][0])
+						if len(values2["-PSEARCH2-"].lower()) == 0:
+							selectedPaths.append(songsPaths[window2["-PSONGS2-"].get_indexes()[0]])
+						else:
+							selectedPaths.append(tempPaths[window2["-PSONGS2-"].get_indexes()[0]])
 						window2["-PSELECTED2-"].update(values=selected)
 
 					if event2 == "-PSELECTED2-" and len(selected) > 0:
 						del selected[window2["-PSELECTED2-"].get_indexes()[0]]
 						del selectedPaths[window2["-PSELECTED2-"].get_indexes()[0]]
-						for i in range(int(values2["-PSELECTED2-"][0][0:1]),len(selected)):
-							selected[i] = str(i) + selected[i][len(str(i+1)):]
 						window2["-PSELECTED2-"].update(values=selected)
 
 					if event2 == "-PSUBMIT2-" and len(selected) > 0:
-						if edit == False:
+						if edit == False: # New playlist
 							layoutP3=[
 							[
 								sg.Text("Name: ", text_color=textc, background_color=background, expand_x=True),
@@ -1003,13 +1218,10 @@ def Playlist(listed):
 						else:
 							name = values["-PPLAYLISTS-"][0]
 						if len(name) > 0:
-							f = open(home + "playlists/" + name, 'w', encoding="utf-8")
-							content=""							
-							for i in range(0, len(selected)):
-								if len(selectedPaths[i]) > 0:
-									content = content + selected[i][len(str(i))+2:] + "\n"
-								else:
-									content = content + selectedPaths[i][len(str(i))+2:] + "\n"
+							content=""						
+							for i in range(len(selected)):
+								content = content + selectedPaths[i] + "\n"
+							f = open(home + "playlists/" + name, 'w', encoding="utf-8")							
 							f.write(content)
 							f.close()
 							files=["---create new---"]
@@ -1028,10 +1240,21 @@ def Playlist(listed):
 
 					if event2 == "-PSEARCH2-":
 						newList=[]
+						localList=[]
+						local = False
+						newPaths=[]
+						localPaths=[]
 						for i in range(0, len(songs)):
-							if values2["-PSEARCH2-"].lower() in songs[i].lower():
+							if songs[i] == "[LOCAL TRACKS]":
+								local = True
+							if values2["-PSEARCH2-"].lower() in songs[i].lower() and local == False:
 								newList.append(songs[i])
+								newPaths.append(songsPaths[i])
+							if values2["-PSEARCH2-"].lower() in songs[i].lower() and local == True:
+								localList.append(songs[i])
+								localPaths.append(songsPaths[i])
 						tempSort=[]
+						tempPaths=[]
 						l = len(values2["-PSEARCH2-"].lower())+1
 						for x in range(1,len(values2["-PSEARCH2-"].lower())+1):	
 							for i in range(len(newList)):
@@ -1043,6 +1266,7 @@ def Playlist(listed):
 											break
 									if valid == 1:							
 										tempSort.append(newList[i])
+										tempPaths.append(newPaths[i])
 						for i in range(len(newList)):
 							valid=0
 							for x in range(len(tempSort)):
@@ -1051,11 +1275,41 @@ def Playlist(listed):
 									break				
 							if valid == 0:
 								tempSort.append(newList[i])
+								tempPaths.append(newPaths[i])
+						if len(localList) != 0:
+							newList=localList
+							newPaths=localPaths
+							tempSort.append("")
+							tempSort.append("[LOCAL TRACKS]")
+							tempPaths.append('')
+							tempPaths.append('')
+							usedPaths=[]
+							for x in range(1,len(values2["-PSEARCH2-"].lower())+1):	
+								for i in range(len(newList)):
+									if values2["-PSEARCH2-"].lower()[0:l-x] == newList[i].lower()[0:l-x]:
+										valid=1
+										for a in range(len(usedPaths)):
+											if newPaths[i] == usedPaths[a]:
+												valid=0
+												break
+										if valid == 1:							
+											tempSort.append(newList[i])
+											tempPaths.append(newPaths[i])
+											usedPaths.append(newPaths[i])
+							for i in range(len(newList)):
+								valid=0
+								for x in range(len(tempSort)):
+									if newList[i] == tempSort[x]:
+										valid=1	
+										break				
+								if valid == 0:
+									tempSort.append(newList[i])
+									tempPaths.append(newPaths[i])
 						window2["-PSONGS2-"].update(values=tempSort)
 
-			else:
+			else: # Viewing a playlists contents before submitting or editing
 				playlist=values["-PPLAYLISTS-"][0]
-				f = open(home + "playlists/" + playlist)
+				f = open(home + "playlists/" + playlist, encoding='UTF-8')
 				selected=[]			
 				while True:
 					line = f.readline()
@@ -1071,11 +1325,16 @@ def Playlist(listed):
 							selectedPaths.append(songsPaths[i])
 							break
 					if cache == 1: 
+						valid=0
 						selected.append(line)
 						for i in range(len(songs)):
 							if selected[len(selected)-1] == songs[i]:
+								valid=1
 								selectedPaths.append(songsPaths[i])
 								break
+						if valid == 0:
+							print("Unable to find: " + str(selected[len(selected)-1]))
+							del selected[len(selected)-1]
 				
 					window["-PSEL-"].update(values=selected)
 
@@ -1085,7 +1344,7 @@ def Playlist(listed):
 	
 	return selected, selectedPaths
 
-def Settings(sp):
+def Settings(likes, likesId):
 	global foreground
 	global background
 	global textc
@@ -1099,31 +1358,18 @@ def Settings(sp):
 	x=0
 	rec=[]
 	recId=[]
-	likes=[]
-	likesId=[]
 	results=[]
 
-	while True: 
-		try:
-			results.append(sp.current_user_saved_tracks(20, x))
-			x+=20
-			if (len(sp.current_user_saved_tracks(20, x)['items']) == 0):
-				break
-		except:
-			pass
+	if len(likes) != 0:
+		f = open(home + "recommend.pkl", 'rb')
+		rec = pickle.load(f)
+		f.close()
+		recId = list(rec)
+		for x in range(len(rec)):
+			for i in range(len(likes)):
+				if rec[x] == likesId[i]:
+					rec[x] = likes[i]
 
-	for i in range(0, len(results)):
-		for idx, item in enumerate(results[i]['items']):
-			likes.append(item['track']['name'] + " - " + item['track']['artists'][0]['name'])
-			likesId.append(item['track']['id'])
-	f = open(home + "recommend.pkl", 'rb')
-	rec = pickle.load(f)
-	f.close()
-	recId = list(rec)
-	for x in range(len(rec)):
-		for i in range(len(likes)):
-			if rec[x] == likesId[i]:
-				rec[x] = likes[i]
 	window = sg.Window(
 		"Settings", 
 		SettingsLayout(settings, likes, rec), 
@@ -1142,7 +1388,6 @@ def Settings(sp):
 			try:
 				subprocess.check_output(('socat', '-', '/tmp/mpvsocket'), stdin=subprocess.Popen(('echo', '{"command": ["set_property", "volume", '+ str(values["-SVOL-"]) +']}'), stdout=subprocess.PIPE).stdout)
 			except:
-				#print("MPV is not running")
 				pass
 
 		if event == "-SSEL-" and len(rec) > 0:
@@ -1188,7 +1433,7 @@ def Settings(sp):
 			if r != 0:
 				window.close()
 				theme()
-				Settings(sp)
+				Settings(likes, likesId)
 				return 1
 
 		if event == "-SCANCEL-" or event == sg.WIN_CLOSED:		
@@ -1225,6 +1470,7 @@ def Theme():
 	fntSize = t[8]
 	smlSize = t[9]	
 	scroll = t[10]
+	st = t[11]
 
 
 	while True:
@@ -1260,9 +1506,9 @@ def Theme():
 			smlSize = values["-TSMF-"]
 			scroll = values["-TSCL-"]	
 
-			t = [fore, back, textc, high, acc, hov, alf, fnt, fntSize, smlSize, scroll]
+			t = [fore, back, textc, high, acc, hov, alf, fnt, fntSize, smlSize, scroll, st]
 			valid=1
-			for i in range(len(t)-5):
+			for i in range(len(t)-6):
 				if t[i][0] != '#':
 					valid=0
 					break

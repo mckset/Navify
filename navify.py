@@ -1,5 +1,5 @@
 # Navify GUI
-# Version 2.1 : Hot fix
+# Version 3.0 : Sort of Better
 
 # Other programs
 import subwindows
@@ -49,7 +49,8 @@ spotList=[] # Name of Spotify Songs Only to List in GUI
 localList=[] # Name of Local Songs Only to List in GUI
 locPaths=[] # List of paths to local songs
 
-likes=[] # List of Liked Songs
+likes=[] # List of liked song ids
+likesName=[] # Name of liked songs
 
 home=os.path.expanduser('~')
 playerHome=os. getcwd() + "/" # Location of python script
@@ -60,6 +61,11 @@ localMain=["ALL", "LOCAL CACHE","MUSIC"] # The Main Screen for the Local Section
 # NAVIFY STUFF
 header={'User-Agent' : 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:23.0) Gecko/20100101 Forefox/23.0'}
 sp=""
+
+st=3 # Sort Type (0: name 1: artist, 2: playtime, 3: split, 4: year, 5: duration)
+descending=False # Kind of obvious
+
+sNum='-1'
 
 #-------------------------------------------------
 # SETUP FUNCTIONS
@@ -79,6 +85,8 @@ def SetupSettings():
 	global smallFont
 	global localMusic
 	global scroll
+	global st
+	global descending
 
 	err=""
 	if not exists(playerHome + "icons"):
@@ -136,8 +144,12 @@ def SetupSettings():
 		defaultFont=(t[7], t[8])
 		smallFont = (t[7], t[9])
 		scroll = int(t[10])
+		st = int(t[11])
+		if st >= 6:
+			st = st - 6
+			descending = True
 	else:
-		pickle.dump([foreground, background, textc, highlight, accent, "#67778f", alpha, "Mono", "20", "16", "13"], open(playerHome + "theme.pkl", 'wb'))
+		pickle.dump([foreground, background, textc, highlight, accent, "#67778f", alpha, "Mono", "20", "16", "13", "3"], open(playerHome + "theme.pkl", 'wb'))
 
 	settings = pickle.load(open(playerHome + "settings.pkl", 'rb'))
 	localMusic = settings[2]
@@ -162,8 +174,9 @@ def setupLayout():
 		sg.Input(default_text=key[2], text_color=textc, background_color=foreground, disabled_readonly_background_color = highlight, enable_events=True, size=(25,1), focus=True, border_width=0, expand_x=True, key="-SRURI-")
 		],
 		[
+		sg.Button("Go Offline", enable_events=True, mouseover_colors=hover, border_width=0, key="-SOFFLINE-", expand_x=True),
 		sg.Button("Submit", enable_events=True, mouseover_colors=hover, border_width=0, key="-SSUBMIT-", expand_x=True)
-		]
+		]	
 	]
 	return layout
 
@@ -172,12 +185,13 @@ def LoadSpotify():
 	x=0
 	try:
 		sp = spotipy.Spotify(auth_manager=SpotifyOAuth(scope=["user-library-read", "user-library-modify", "playlist-read-private"])) # read - get recommended; modify - change like statues; read-private - get playlists
-		sp.current_user_saved_tracks(1, 1) # Attempts a connetion
+		sp.current_user_saved_tracks(20, x) # Attempts to connect
 	except:
-		print("Error: invalid Spotify settings.\n")
-		SpotSetup()
-		if e == 1:
-			return
+		if sp != "null":
+			print("Error: invalid Spotify settings.\n")
+			SpotSetup()
+			if e == 1:
+				return
 
 def SpotSetup():
 	global sp
@@ -204,19 +218,37 @@ def SpotSetup():
 		if event == "-SSUBMIT-":    
 			spotWindow.close()
 			break
+		if event == "-SOFFLINE-":
+			sp="null"
+			print("Starting in offline mode...")
+			spotWindow.close()
+			break
 		cid = values["-SCID-"]
 		csid = values["-SSID-"]
 		ruri = values["-SRURI-"]
-	key=[cid, csid, ruri]
-	pickle.dump(key, open(playerHome + "keys.pkl", 'wb'))
-	os.environ['SPOTIPY_CLIENT_ID']=key[0]
-	os.environ['SPOTIPY_CLIENT_SECRET']=key[1]
-	os.environ['SPOTIPY_REDIRECT_URI']=key[2]
-	LoadSpotify()
+	if sp != "null":
+		key=[cid, csid, ruri]
+		pickle.dump(key, open(playerHome + "keys.pkl", 'wb'))
+		os.environ['SPOTIPY_CLIENT_ID']=key[0]
+		os.environ['SPOTIPY_CLIENT_SECRET']=key[1]
+		os.environ['SPOTIPY_REDIRECT_URI']=key[2]
+		LoadSpotify()
+
 
 a=0
 key=['','','']
-if exists(playerHome + "keys.pkl"):
+if len(sys.argv) >= 2:
+	for i in range(len(sys.argv)):
+		if sys.argv[i] == "--help":
+			print("Usage:\tnavify [option]\n")
+			print("\t--help\t\t\tDisplays this message")
+			print("\t--offline\t\tStarts the player in offline mode")
+			print("\nMore commands might be available later in the future\n")
+			sys.exit()
+		if sys.argv[i] == "--offline":
+			sp="null"
+
+if exists(playerHome + "keys.pkl") and sp != "null":
 	try:
 		key = pickle.load(open(playerHome + "keys.pkl", 'rb'))
 		os.environ['SPOTIPY_CLIENT_ID']=key[0]
@@ -231,30 +263,30 @@ if exists(playerHome + "keys.pkl"):
 			SpotSetup()
 		else:
 			sys.exit()
-else:	
+elif sp != "null":	
 	subprocess.run(["touch", playerHome + "keys.pkl"])
 	SpotSetup()
 
 		
 # Gets Playlist ids
-print("Gettings playlists...")
-while True:
-	try:
-		playlists = sp.current_user_playlists()['items']
-		plIDS=[]
-		plNames=[]
-		for i in range(len(playlists)):
-			plIDS.append(playlists[i]['id'])
-			plNames.append(playlists[i]['name'])
-		plNames.append("Close")
-		break
-	except:
-		pass
-
+plIDS=[]
+plNames=[]
+if sp != "null":
+	print("Gettings playlists...")
+	while True:
+		try:
+			playlists = sp.current_user_playlists()['items']
+			for i in range(len(playlists)):
+				plIDS.append(playlists[i]['id'])
+				plNames.append(playlists[i]['name'])
+			plNames.append("Close")
+			break
+		except:
+			pass
 def CacheLikes(cache):
 	layout = [
 		[
-		sg.Text("(1/" + str(len(cache)) + ") Caching: " + cache[0][1], text_color=textc, background_color=foreground,  expand_x=True, key="-LTEXT-")
+		sg.Text("(1/" + str(len(cache)) + ") Caching: " + cache[0][1] + " - " + cache[0][2], text_color=textc, background_color=foreground,  expand_x=True, key="-LTEXT-")
 		]
 	]
 	likeWindow = sg.Window(
@@ -272,20 +304,22 @@ def CacheLikes(cache):
 			sys.exit()
 			break
 		if i != len(cache)-1:
-			likeWindow["-LTEXT-"].update("(" + str(i+2) + "/" + str(len(cache)) + ") Caching: " + cache[i+1][1])
+			likeWindow["-LTEXT-"].update("(" + str(i+2) + "/" + str(len(cache)) + ") Caching: " + cache[i+1][1] + " - " + cache[i+1][2])
 		try:
-			print("Caching: " + cache[i][1])
+			print("Caching: " + cache[i][1 + " - " + cache[i][2]])
 		except:
 			print("Language not supported. Please install a font that supports the language for liked song #" + str(i))			
 		url = cache[i][1]
 		for y in range(len(url)): # Removes spaces to search
 			if " " in url[y:y+1]:
 				url=url[0:y] + "+" + url[y+1:]
-		Search("", cache[i][0], cache[i][1], url)
+		Search("", cache[i][0], cache[i][1], cache[i][2], url, cache[i][3])
 	likeWindow.close()	
 
 def GenLikes():
+	global likesName
 	likes=[]
+	likesName=[]
 	results=[]
 	cache=[]
 	x=0
@@ -303,9 +337,10 @@ def GenLikes():
 	for i in range(len(results)):
 		for x in range(len(results[i]['items'])):
 			likes.append(results[i]['items'][x]['track']['id'])
+			likesName.append(results[i]['items'][x]['track']['name'] + " - " + results[i]['items'][x]['track']['artists'][0]['name'])
 			# Checks for songs that need to be cached
 			if not exists(playerHome + "cache/" + likes[x+(20*i)]):
-				cache.append([likes[x+(20*i)], results[i]['items'][x]['track']['name'] + " - " + results[i]['items'][x]['track']['artists'][0]['name']])
+				cache.append([likes[x+(20*i)], results[i]['items'][x]['track']['name'], results[i]['items'][x]['track']['artists'][0]['name'], results[i]['items'][x]['track']['album']['images'][0]['url']])
 
 	if len(likes) == 0:
 		window = sg.Window("NOTICE", 
@@ -323,23 +358,45 @@ def GenLikes():
 	elif len(cache) > 0:
 		CacheLikes(cache)
 	return likes  
-
+	
 
 #-------------------------------------------------
 # FUNCTIONS THAT GET CALLED DURING THE MAIN LOOP
 #-------------------------------------------------
 
-def Play(x, name):  
+def Play(x, name): 
 	track=ID[x]
-	settings = pickle.load(open(playerHome + 'settings.pkl', 'rb'))
-	vol=settings[0]
-	for i in range(3):  # 3 attempts to retrieve the song
+	
+	vOff=100
+	sOff=0
+	eOff=0
+	data=""
+	try:
+		f=open(playerHome + "cache/" + listed[x][1], 'r', encoding='utf-8').readlines(0)
+		vOff=float(f[7][0:len(f[7])-1])
+		eOff=f[6][0:len(f[6])-1]
+		sOff=f[5][0:len(f[5])-1]
+	except:
 		try:
-			print("attempt #" + str(i+1))	
-			subprocess.run(["mpv","--title=" + name, "--no-video", "--input-ipc-server=/tmp/mpvsocket", "--volume=" + str(vol), track])
-			break
+			f=open(listed[x][0][0:len(listed[x][0])-len(name)] + ID[x][len(ID[x])-11:], 'r', encoding='utf-8').readlines(0)
+			vOff=float(f[3][0:len(f[3])-1])
+			eOff=f[2][0:len(f[2])-1]
+			sOff=f[1][0:len(f[1])-1]
 		except:
 			pass
+		
+	settings = pickle.load(open(playerHome + 'settings.pkl', 'rb'))
+	vol=settings[0]*(vOff/100)
+	if vol > 150:
+		vol == 150
+
+	try:
+		if str(eOff) != '0':
+			subprocess.run(["mpv","--title=" + name, "--start=" + str(sOff), "--end=-" + str(eOff), "--no-video", "--input-ipc-server=/tmp/mpvsocket", "--volume=" + str(vol), track])
+		else:		
+			subprocess.run(["mpv","--title=" + name, "--start=" + str(sOff),"--no-video", "--input-ipc-server=/tmp/mpvsocket", "--volume=" + str(vol), track])
+	except:
+		pass
 
 def PlayAll(select, isCache): # Plays all songs
 	tracks=next(walk(select), (None, None, []))[2]
@@ -382,7 +439,8 @@ def UpLocal(select, isCache):
 
 		for i in range(len(tracks)):
 			if isCache == True:
-				tempName.append(subprocess.Popen(["cat", select + "/" + tracks[i]], stdout=subprocess.PIPE, text=True).communicate()[0])			
+				f=open(select + '/' + tracks[i], 'r', encoding='UTF-8').readlines(0)[0]
+				tempName.append(f[0:len(f)-1])			
 			else:
 				newList.append(tracks[i])
 		if len(tempName) > 0:
@@ -435,14 +493,15 @@ def ViewAllCondense(l1, l2):
 	locID=[] # URLS AND PATHS TO SONGS
 	
 	for i in range(len(l2)):
-		locTracks.append(subprocess.Popen(["cat", l2[i]], stdout=subprocess.PIPE, text=True).communicate()[0])
+		f=open(l2[i], 'r', encoding='UTF-8').readlines(0)[0]
+		locTracks.append(f[0:len(f)-1])
 		a=0
 		for x in range(len(l2[i])):
 			if "/" in l2[i][len(l2[i]) - x:]:
 				a=len(l2[i]) - x
 				break
 		locID.append("https://www.youtube.com/watch?v=" + l2[i][a+1:])		
-		locPaths.append(l2[i][0:a+1]+locTracks[len(locTracks)-1])		
+		locPaths.append(l2[i])		
 
 	for i in range(len(locTracks)):
 		tempSort2.append([locTracks[i], locPaths[i], locID[i]])
@@ -495,78 +554,290 @@ def GenList():
 	# RESETS VALUES
 	listed=[] 
 	ID=[]
-	spotName=[]
-	sortID=[]
-	sortListed=[]
-	tempID=[]
-	combinedList=[]    
+	sortList=[]
+	prevName=[]
 	level=0
+	spotName=[]
 	spotList=[]
+	artists=[]
+	year=[]
+	duration=[]
+	sTime=[]
+	eTime=[]
+	playC=[]	
 
+	# Url, Name, Aritst, Year, Duration, Play count, Start Time, Cut off 
+
+	'''
+	--- TRACK INFO---
+	Line 1 - url/location
+	Line 2 - name
+	Line 3 - artist
+	Line 4 - release year
+	Line 5 - duration
+	Line 6 - start time
+	Line 7 - cut off
+	line 8 - vol offset
+	Line 9 - play count
+	'''
+	hc=1
    	# Lists tracks in the Cache folder (Spotify Cache)
 	tempID=next(walk(playerHome + "cache/"), (None, None, []))[2]
 	for i in range(len(tempID)):
-		f = open (playerHome + "cache/" + tempID[i], encoding="utf-8").readlines(0)
-		sortID.append(f[0][0:len(f[0])-1])
-		prevListed.append(f[1])
-		sortListed.append(f[1].upper())
-		spotName.append(tempID[i])
+		try:
+			f = open(playerHome + "cache/" + tempID[i], encoding="utf-8").readlines(0)
+			if len(f) != 10:
+				a=" " + 1
+			f.append(tempID[i])
+			sortList.append(list(f))
+			if len(f[8]) > hc:
+				hc=len(f[8])
+			prevListed.append(list(f))
+			spotName.append(tempID[i]) 
+			ID.append(f[0][0:len(f[0])-1])
+			listed.append([f[1][0:len(f[1])-1] + " - " + f[2][0:len(f[2])-1], tempID[i]])
+		except:
+			print("Unable to add " + tempID[i])
+			print("Please check the file in the cache directory")
 
-	# Removes 'The' from the beginning of tracks to better sort
-	for i in range(len(sortListed)):
-		if "THE " in sortListed[i][0:4]:
-			sortListed[i] = sortListed[i][4:] + ", THE"
 
-	# Sorts the tracks alphabetically
-	for i in range(len(sortID)):
-		combinedList.append([sortListed[i],sortID[i], spotName[i]])    
-	combinedList.sort()  
+	# Sets the list to uppercase for a better sort
+	for i in range(len(sortList)):
+		if '\n' in sortList[i][1]:
+			sortList[i][1] = sortList[i][1][0:len(sortList[i][1])-1]
+			prevListed[i][1] = prevListed[i][1][0:len(prevListed[i][1])-1]
+		if '\n' in sortList[i][2]:
+			sortList[i][2] = sortList[i][2][0:len(sortList[i][2])-1]
+			prevListed[i][2] = prevListed[i][2][0:len(prevListed[i][2])-1]
+		sortList[i][4] = str(int(int(sortList[i][4])/60000))
+		if len(sortList[i][4]) == 1:
+			sortList[i][4] = "00" + sortList[i][4]
+		elif len(sortList[i][4]) == 2:
+			sortList[i][4] = "0" + sortList[i][4]
+		while len(sortList[i][8]) < hc:
+			sortList[i][8]='0'+sortList[i][8]
 
-	# Stores the sorted values in the lists
-	for i in range(len(sortID)):
-		ID.append(combinedList[i][1])
-		listed.append([combinedList[i][0], combinedList[i][2]])   
+	spotList=list(["[PLAY ALL] (0)"])
 
-	# Adds "The " back into the track name
-	for i in range(len(listed)):
-		if ", The".lower() in listed[i][0].lower():
-			listed[i][0] = "The " + listed[i][0][0:len(listed[i][0])-5]
+	# SORTING
+	if st == 0: # Name
+		# Removes 'The' from the beginning of tracks to better sort
+		for i in range(len(sortList)):
+			sortList[i][1] = sortList[i][1].upper()
+			if "THE " in sortList[i][1][0:4]:
+				sortList[i][1] = sortList[i][1][4:] + ", THE"
+
+		if descending == False:
+			sortList.sort(key = lambda sortList: sortList[1])
+		else:
+			sortList.sort(reverse = True, key = lambda sortList: sortList[1])
+
+		# Adds 'The' back into the sorted list
+		for i in range(len(sortList)):
+			if ", The".lower() in sortList[i][1].lower():
+				sortList[i][1] = "The " + sortList[i][1][0:len(sortList[i][1])-5]
+		# Resets the name back to the way it was
+		for i in range(len(prevListed)):
+			for a in range(len(sortList)):
+				if sortList[a][1].upper() == prevListed[i][1].upper():
+					sortList[a][1] = prevListed[i][1]
+					break
+
+		# Stores the song names for the player to read
+		for i in range(len(sortList)):
+			spotList.append(sortList[i][1] + " - " + sortList[i][2])
+
+	if st == 1: # Artist
+		# Removes 'The' from the beginning of tracks to better sort
+		for i in range(len(sortList)):
+			sortList[i][2] = sortList[i][2].upper()
+			if "THE " in sortList[i][2][0:4]:
+				sortList[i][2] = sortList[i][2][4:] + ", THE"
+
+		if descending == False:
+			sortList.sort(key = lambda sortList: sortList[2])
+		else:
+			sortList.sort(reverse = True, key = lambda sortList: sortList[2])
+
+		# Adds 'The' back into the sorted list
+		for i in range(len(sortList)):
+			if ", The".lower() in sortList[i][2].lower():
+				sortList[i][2] = "The " + sortList[i][2][0:len(sortList[i][2])-5]
+
+		# Resets the artist name back to the way it was
+		for i in range(len(prevListed)):
+			for a in range(len(sortList)):
+				if sortList[a][2].upper() == prevListed[i][2].upper():
+					sortList[a][2] = prevListed[i][2]
+					break
+		# Dividers
+		artist=sortList[0][2]
+		cSongs=[]
+		spotList.append("")
+		spotList.append("---" + artist + "---") 
+		for i in range(len(sortList)):
+			if sortList[i][2].upper() == artist.upper():
+				cSongs.append(sortList[i][1] + " - " + artist)
+			else:
+				artist = sortList[i][2]
+				cSongs.sort()
+				for x in range(len(cSongs)):
+					spotList.append(cSongs[x])
+				cSongs=[]
+				spotList.append("")
+				spotList.append("---" + artist + "---" )
+				cSongs.append(sortList[i][1] + " - " + sortList[i][2])
+
+	if st == 2: # Play count
+		if descending == False:
+			sortList.sort(key = lambda sortList: sortList[8])
+		else:
+			sortList.sort(reverse = True, key = lambda sortList: sortList[8])
+			
+		spotList.append('')
+		spotList.append("---" + str(int(sortList[0][8])) + "---")
+		lCount=int(sortList[0][8])		
+		tempList=[]
+		for i in range(len(sortList)):
+			if int(sortList[i][8]) != lCount:
+				tempList.sort()
+				for a in range(len(tempList)):
+					spotList.append(tempList[a])
+				tempList=[]
+				lCount = int(sortList[i][8])
+				spotList.append('')
+				spotList.append("---" + str(lCount) + "---")
+				
+			tempList.append(sortList[i][1] + " - " + sortList[i][2])
+		for a in range(len(tempList)):
+			spotList.append(tempList[a])
+		spotList.append('')
+	
+	if st == 3: # Split
+		spotList.append('')
+		tempBottom=[]
+		tempTop=[]	
+		for i in range(len(spotName)):
+			e=False
+			for x in range(len(likes)):
+				if likes[x] == spotName[i]:
+					tempTop.append(sortList[i][1] + " - " + sortList[i][2])
+					e=True
+					break
+			if e == False:
+				tempBottom.append(sortList[i][1] + " - " + sortList[i][2])
+		spotList.append("---LIKES (" + str(len(tempTop)) + ")---")
+		tempTop.sort()
+		tempBottom.sort()
+		for i in range(len(tempTop)):
+			spotList.append(tempTop[i])
+		spotList.append("")
+		spotList.append("---RECOMMENDED (" + str(len(tempBottom)) + ")---")
+		for i in range(len(tempBottom)):
+			spotList.append(tempBottom[i])
+		spotList.append("")
+
+	
+	if st == 4: # Year
+		spotList.append('')
+		if descending == False:
+			sortList.sort(key = lambda sortList: sortList[3])
+		else:
+			sortList.sort(reverse = True, key = lambda sortList: sortList[3])
+		tempList=[]
+		cYear=sortList[0][3][0:4]
+		spotList.append("---" + cYear + "---")
+		for i in range(len(sortList)):
+			if sortList[i][3][0:4] != cYear:
+				tempList.sort()
+				for a in range(len(tempList)):
+					spotList.append(tempList[a])
+				tempList=[]
+				cYear = sortList[i][3][0:4]
+				spotList.append("")
+				spotList.append("---" + cYear + "---")
+			tempList.append(sortList[i][1] + " - " + sortList[i][2])
+		for a in range(len(tempList)):
+			spotList.append(tempList[a])
+		spotList.append('')
 		
-	# Returns the name back to the way it was
-	for i in range(len(listed)):
-		for x in range(len(prevListed)):
-			if listed[i][0].lower() == prevListed[x].lower():
-				listed[i][0] = prevListed[x]
-				break
+	
+	if st == 5: # Duration
+		if descending == False:
+			sortList.sort(key = lambda sortList: sortList[4])
+		else:
+			sortList.sort(reverse = True, key = lambda sortList: sortList[4])
+		dur = 0
+		tempList=[]
+		for i in range(len(sortList)):
+			if int(sortList[i][4]) != dur:
+				tempList.sort()
+				for a in range(len(tempList)):
+					spotList.append(tempList[a])
+				tempList=[]
+				dur=int(sortList[i][4])
+				spotList.append("")
+				spotList.append("--->" + str(dur) + " min---")
+			tempList.append(sortList[i][1] + " - " + sortList[i][2])
+		for a in range(len(tempList)):
+			spotList.append(tempList[a])
+		spotList.append('')
+	# Stores the sorted values into the Listed and ID variables
 
-	spotList.append("[PLAY ALL] (" + str(len(listed)) + ")")
-	for i in range(len(listed)):
-		spotList.append(listed[i][0])
+	spotList[0]="[PLAY ALL] (" + str(len(listed)) + ")"
 
+	# Checks for duplicate songs (because Spotify does that for some reason)
+	c=0
+	for i in range(len(spotList)):
+		try:
+			if len(spotList[i]) != 0:
+				for x in range(i+1, len(spotList)-1):
+					if spotList[i].upper() == spotList[x].upper():
+						del spotList[x]
+						x=x-1
+						c=c+1
+		except:
+			pass
 	if exists(localMusic):
 		ViewAllCondense(ViewAll(localMusic), ViewAll(playerHome + "playCache"))
 	else:
 		ViewAllCondense([], ViewAll(playerHome + "playCache")) 
+	
+	if c != 0:
+		return "Hid " + str(c) + " duplicate songs"
 
 def getPlaylistSongs(selID):
 	plTracks=[]
+	plArt=[]
 	plID=[] 
+	plImgs=[]
 	try:
 		p = sp.playlist_items(selID)			
 	except:	
-		return []
-
+		LoadSpotify()
+		try:
+			p = sp.playlist_items(selID)
+		except Exception as e:
+			print(e)
+			print("Unable to load playlist")
+			return []
 	for i in range(len(p['items'])):
 		if not exists(playerHome + 'blacklist/' + p['items'][i]['track']['id']):
-			plTracks.append(p['items'][i]['track']['name'] + " - " + p['items'][i]['track']['album']['artists'][0]['name'])
+			plTracks.append(p['items'][i]['track']['name'])
+			plArt.append(p['items'][i]['track']['album']['artists'][0]['name'])
 			plID.append(p['items'][i]['track']['id'])
-	checkCache(plTracks, plID)
+			plImgs.append(p['items'][i]['track']['album']['images'][0]['url'])
+	checkCache(plTracks, plArt, plID, plImgs)
+	for i in range(len(plTracks)):
+		plTracks[i]=plTracks[i] + " - " + plArt[i]
 	return plTracks			
 
 def Navify():
 	try:
 		recList=[] 
 		recId=[]
+		recArt=[]
+		imgs=[]
 		tracks = pickle.load(open(playerHome + 'recommend.pkl', 'rb'))
 					
 		# Sets up the playlist to use based off of the first 5 tracks in the liked playlist
@@ -575,43 +846,57 @@ def Navify():
 		# Checks to see if a track is in the blacklist
 		for i in range(len(rec['tracks'])):
 			if not exists(playerHome + 'blacklist/' + str(rec['tracks'][i]['id'])):
-				recList.append(str(rec['tracks'][i]['name']) + " - " + str(rec['tracks'][i]['artists'][0]['name']))
+				recList.append(str(rec['tracks'][i]['name']))
+				recArt.append(str(rec['tracks'][i]['artists'][0]['name']))
 				recId.append(rec['tracks'][i]['id'])
-		checkCache(recList, recId)	
+				imgs.append(rec['tracks'][i]['album']['images'][0]['url'])
+		checkCache(recList, recArt, recId, imgs)	
+		for i in range(len(recList)):
+			recList[i]=recList[i] + " - " + recArt[i]
 		return recList
 	except:
 		return []
 
-def checkCache(songs, ids):
+def checkCache(songs, artists, ids, imgs):
+	global sNum
 	fText=""
 
     # Checks to see if a track is in the cache directory and caches it if not  
 	for i in range(0,len(ids)):
-		if not exists(playerHome + "cache/" + ids[i]):
-			#print(i)
-			fText=str(songs[i])		
-			name=fText
+		sNum='(' + str(i+1) + '/' + str(len(ids)) + ')'
+		if not exists(playerHome + "cache/" + ids[i]):	
+			fText=str(songs[i]) + " - " + artists[i]		
+			name=songs[i]
 			for x in range(0,len(fText)):
 				if " " in fText[x:x+1]:
 					fText=fText[0:x] + "+" + fText[x+1:]  
-			Search(songs[i], ids[i], name, fText)
+			Search(songs[i], ids[i], name, artists[i], fText, imgs[i])
+	sNum='-1'
 
-def Search(string, cache, name, url):     
+def Search(string, cache, name, artist, url, img):    
 	req=request.Request("https://youtube.com/results?search_query=" + parse.quote(url), headers=header)
 	U = request.urlopen(req)
 	data = U.read().decode('utf-8')
 	for i in range(0,len(data)):
 		if "videoid" in data[i:i+7].lower() and not "videoids" in data[i:i+8].lower():
 			video=data[i+10:i+21]
-			break
+			#break
+		if "label" in data[i:i+6] and "minutes" in data[i+10:i+20]:
+			l=int(data[i+9:i+10])
+			if l < 15:		
+				break
+	date=sp.track(cache)['album']['release_date']
+	dur=str(sp.track(cache)['duration_ms'])
 	f = open(playerHome + "cache/" + str(cache) , "w", encoding="utf-8")
-	f.write("https://www.youtube.com/watch?v=" + video + "\n" + name)
+	f.write("https://www.youtube.com/watch?v=" + video + "\n" + name + "\n" + artist + '\n' + date + '\n' + dur + '\n0\n0\n100\n0\n' + img) 
 	f.close()
-
-likes=GenLikes()
-if not exists(playerHome + "recommend.pkl") and likes[0]:
-		pickle.dump([likes[0]], open(playerHome + "recommend.pkl", 'wb'))
-GenList() 
+        
+if sp != "null":
+	likes=GenLikes()
+	if not exists(playerHome + "recommend.pkl") and likes[0]:
+			pickle.dump([likes[0]], open(playerHome + "recommend.pkl", 'wb'))
+print("Getting cached songs...")
+print(GenList()) 
 		
 def reloadNavify(queue, name, liked):
 	SetupSettings()
@@ -619,6 +904,7 @@ def reloadNavify(queue, name, liked):
 	window = sg.Window("Navify", 
 		   layout(queue, name, liked), 
 		   resizable=True,
+		   icon=playerHome + "icons/icon.png",
 		   alpha_channel=alpha, 
 		   background_color=background, 
 		   button_color=accent,
@@ -635,15 +921,16 @@ def reloadNavify(queue, name, liked):
 # DEFINE MAIN WINDOW LAYOUT
 #-------------------------------------------------
 def layout(queue, current, like):
+
 	# Spotify Songs
 	SongList = [
 		[
 		sg.Button(image_filename=playerHome + "icons/search.png", enable_events=True, mouseover_colors=hover, border_width=0, key="-SEARCH-"),
-		sg.Text("Songs", text_color=textc, background_color=background,  expand_x=True),
+		sg.Text("Songs", text_color=textc, background_color=background,  expand_x=True, key="-STATUS-"),
 		sg.Button(image_filename=playerHome + "icons/edit.png", enable_events=True, mouseover_colors=hover, border_width=0, key="-EDIT-")
 		],
 		[
-		sg.Listbox(values=spotList, background_color=foreground, font=defaultFont, text_color=textc, no_scrollbar=False, size=(25,1), enable_events=True,  expand_y=True, expand_x=True, key="-SONGS-")], 
+		sg.Listbox(values=spotList, background_color=foreground, font=defaultFont, text_color=textc, no_scrollbar=False, size=(25,1), right_click_menu=[["Sort"], [["Name",["Name Ascending", "Name Descending"], "Artist",["Artist Ascending", "Artist Descending"], "Play Count",["Play Count High to Low", "Play Count Low to High"], "Split", "Year",["Year High to Low", "Year Low to High"], "Duration",["Duration High to Low", "Duration Low to High"], "Close"]]], enable_events=True,  expand_y=True, expand_x=True, key="-SONGS-")], 
 		[
 		sg.Input(text_color=textc, background_color=foreground, disabled_readonly_background_color = highlight, enable_events=True, size=(25,1), focus=True, border_width=0, expand_x=True, disabled=True, key="-INSEARCH-")
 		]
@@ -658,6 +945,19 @@ def layout(queue, current, like):
 		],
 		[
 		sg.Listbox(values=localMain, background_color=foreground, text_color=textc, no_scrollbar=False, size=(1,1), enable_events=True, expand_y=True, expand_x=True, key="-LOCAL-")
+		] 
+	]
+	
+	# Offline Local
+
+	LocalOff = [
+		[
+		sg.Button(image_filename=playerHome + "icons/add.png", enable_events=True, mouseover_colors=hover, border_width=0, key="-ADD-"),
+		sg.Text("Local", background_color=background,text_color=textc,  expand_x=True),
+		sg.Button(image_filename=playerHome + "icons/playlist.png", enable_events=True, mouseover_colors=hover, border_width=0, key="-PLAYLIST-")
+		],
+		[
+		sg.Listbox(values=localMain, background_color=foreground, text_color=textc, no_scrollbar=False, size=(25,1), enable_events=True, expand_y=True, expand_x=True, key="-LOCAL-")
 		] 
 	]
 
@@ -688,28 +988,46 @@ def layout(queue, current, like):
 		]
 	]
 
-	# Sets the Layout for the Main Window
-	layout = [
-		[
-		sg.Column(Local, expand_y=True,background_color=background,  expand_x=True), # Local Songs
-		sg.VSeparator(color=foreground),
-		sg.Column(SongList, expand_y=True,background_color=background,  expand_x=True), # Spotify Songs
-		sg.VSeparator(color=foreground),
-		sg.Column(Queue, expand_y=True, background_color=background, expand_x=True) # Queued Songs
-		],
-		[
-		sg.Slider(range=(0,1), default_value=0, enable_events=True, background_color=foreground, trough_color=foreground, orientation='h', disable_number_display=True, border_width = 1, expand_x=True, key="-BAR-") # Progress Bar
-		],
-		[
-		sg.Column(BottomBar, background_color=background, expand_x=True) # Play Bar
+
+	if sp != "null":
+		# Sets the Layout for the Main Window (Online)
+		layout = [
+			[
+			sg.Column(Local, expand_y=True,background_color=background,  expand_x=True), # Local Songs
+			sg.VSeparator(color=foreground),
+			sg.Column(SongList, expand_y=True,background_color=background,  expand_x=True), # Spotify Songs
+			sg.VSeparator(color=foreground),
+			sg.Column(Queue, expand_y=True, background_color=background, expand_x=True) # Queued Songs
+			],
+			[
+			sg.Slider(range=(0,1), default_value=0, enable_events=True, background_color=foreground, trough_color=foreground, orientation='h', disable_number_display=True, border_width = 1, expand_x=True, key="-BAR-") # Progress Bar
+			],
+			[
+			sg.Column(BottomBar, background_color=background, expand_x=True) # Play Bar
+			]
 		]
-	]
+	else:
+		# Sets the Layout for the Main Window (Offline)
+		layout = [
+			[
+			sg.Column(LocalOff, expand_y=True,background_color=background,  expand_x=True), # Local Songs
+			sg.VSeparator(color=foreground),
+			sg.Column(Queue, expand_y=True, background_color=background, expand_x=True) # Queued Songs
+			],
+			[
+			sg.Slider(range=(0,1), default_value=0, enable_events=True, background_color=foreground, trough_color=foreground, orientation='h', disable_number_display=True, border_width = 1, expand_x=True, key="-BAR-") # Progress Bar
+			],
+			[
+			sg.Column(BottomBar, background_color=background, expand_x=True) # Play Bar
+			]
+		]
 	return layout
 
 # Create the window
 window = sg.Window("Navify", 
 	   layout(["[CLEAR]"], "Nothing", "elike.png"), 
 	   resizable=True,
+	   icon=playerHome + "icons/icon.png",
 	   alpha_channel=alpha, 
 	   background_color=background, 
 	   button_color=accent,
@@ -729,10 +1047,14 @@ def Player():
 	global level
 	global locPaths		  
 	global likes
+	global likesName
 	global window
 	global localMusic
 	global listed
 	global spotList
+	global st
+	global descending
+	global sNum
 
 	# Default Values
 	isPlaying=False # Set to True When a Song Gets Played
@@ -745,9 +1067,13 @@ def Player():
 	shuffle=False # Is the player set to shuffle
 	vAll=False # Set to true when local is viewing all tracks
 	isPrev=False # Tells the player if the previous button was pushed and to ignore the repeat function if so
+	livestream=False
+	counted=True # True when a play has been counted
 	
 	level=0 # How Many Folders Down the Local Section is
 	duration=1 # How long the song lasts
+	oldDur=1 # Used to check for livestreams
+	durSnap=1 # How many seconds before the progress bar snaps to the end 
 	current=1 # Current playtime position
 	editI=0 # Index of the song that is being edited in the list 'listed'
 	time=0 # Count down to start moving the scrollbar again
@@ -755,9 +1081,9 @@ def Player():
 	oldLen=0 # The length of the previous search to prevent the player from constantly updating
 
 	path="" # Path to Local Songs
-	tempName = "" # Something
+	tempName = "" # Scrolling text
 	name="" # I think this is the name of the song
-	namePath="" # The path to name 
+	namePath="" # The path to name (NO USE)
 	liked="" # Something to do with likes
 
 	queue=["[CLEAR]"] # Queued songs 
@@ -777,15 +1103,31 @@ def Player():
 		if event == sg.WIN_CLOSED:
 			window.close() # Closes the window
 			break
-	
-		window["-INSEARCH-"].SetFocus(force = False) # Prevents keyboard inputs from accidentally activating events
+
+		if sp == "null":
+			window["-NAVIFY-"].update(disabled=True)
+			window["-ADD-"].update(disabled=True)
+		else:
+			window["-INSEARCH-"].SetFocus(force = False) # Prevents keyboard inputs from accidentally activating events
+
+			if event == "Escape:9":
+				edit=False
+				search=False
+				window["-EDIT-"].update(button_color=accent)
+				window["-SEARCH-"].update(button_color=accent)
+				window["-INSEARCH-"].update("",disabled=True)
+				window["-SONGS-"].update(values=spotList)
 
 		try: # Stops shortcuts from working when typing
-			if ":" in event:
+			if ":" in event or len(event) == 1:
 				if search == True or edit == True:
 					event=""		
 		except:
 			pass
+
+		if sNum != '-1': # Shows how much is being cached
+			queue[0] = "[CLEAR] " + sNum
+			window["-QUEUE-"].update(values=queue)
 
 		# Resets after the song is finished		
 		if isPlaying == True:
@@ -804,7 +1146,8 @@ def Player():
 					for i in range(len(name[8:])):
 						if name[i:i+2] == '\",':
 							name=name[9:i]
-							break					
+							break			
+					currentTrack="none"		
 					window["-PLAYING-"].update("Now Playing: " + name)
 			except:
 				pass
@@ -834,24 +1177,20 @@ def Player():
 		# Things that happen when a song is playing (Progress bar and keyboard inputs)
 		if isPlaying == True:			
 			try:
-				duration = subprocess.check_output(('socat', '-', '/tmp/mpvsocket'), stdin=subprocess.Popen(('echo', '{ "command": ["get_property", "duration"] }'), stdout=subprocess.PIPE).stdout, text=True)
-				current = subprocess.check_output(('socat', '-', '/tmp/mpvsocket'), stdin=subprocess.Popen(('echo', '{ "command": ["get_property", "playback-time"] }'), stdout=subprocess.PIPE).stdout, text=True)
-					
-				for i in range(len(duration[8:])):
-					if duration[i:i+1] == ',':
-						duration=float(duration[8:i])
-						break
-				for i in range(len(current[8:])):
-					if current[i:i+1] == ',':
-						current=float(current[8:i])
-						break
-				
 				# KEYBOARD EVENTS
 				if event == "space:65": # Spacebar
 					event="-PLAY-"
 
 				if event == "period:60": # Key '>'
 					event = "-SKIP-"
+
+				if event == "slash:61" and len(queue) > 0: # Key '/'
+					queue.insert(1,queue[len(queue)-1])
+					queuePaths.insert(1,queuePaths[len(queuePaths)-1])
+					del queue[len(queue)-1]
+					del queuePaths[len(queuePaths)-1]
+					window["-QUEUE-"].update(values=queue)
+					
 
 				if event == "Up:111": # Arrows Up and Down
 					settings[0] = settings[0] + 2
@@ -880,52 +1219,178 @@ def Player():
 						current = 0
 					subprocess.check_output(('socat', '-', '/tmp/mpvsocket'), stdin=subprocess.Popen(('echo', '{ "command": ["set_property", "playback-time", ' + str(current) + '] }'), stdout=subprocess.PIPE).stdout, text=True)
 
-
-				# PROGRESS BAR STUFF
 				if time == 0:
-					window["-BAR-"].update(current*100, range=(0,duration*100))
-				min = int(current/60)
-				sec = int((current - min*60))
-				if sec >= 10:
-					current = str(min) + ":" + str(sec)
-				else:
-					current = str(min) + ":0" + str(sec)
-				min = int(duration/60)
-				sec = int((duration - min*60))
-				if sec >= 10:
-					duration = str(min) + ":" + str(sec)
-				else:
-					duration = str(min) + ":0" + str(sec)
-				current = current + "/" + duration
-				window["-TIME-"].update(current)	
+					duration = subprocess.check_output(('socat', '-', '/tmp/mpvsocket'), stdin=subprocess.Popen(('echo', '{ "command": ["get_property", "duration"] }'), stdout=subprocess.PIPE).stdout, text=True)
+					current = subprocess.check_output(('socat', '-', '/tmp/mpvsocket'), stdin=subprocess.Popen(('echo', '{ "command": ["get_property", "playback-time"] }'), stdout=subprocess.PIPE).stdout, text=True)
+						
+					for i in range(len(duration[8:])):
+						if duration[i:i+1] == ',':
+							duration=float(duration[8:i])
+							break
+					for i in range(len(current[8:])):
+						if current[i:i+1] == ',':
+							current=float(current[8:i])
+							break
+
+					# PROGRESS BAR STUFF						
+					if livestream == False:
+						window["-BAR-"].update(current, range=(0,duration))
+					else:
+						v=(current/duration)*100
+						if current >= duration-20:
+							v=100
+						window["-BAR-"].update(v, range=(0,100))						
+									
+					if oldDur != duration and current > 3:	
+						livestream = True
+						#window["-BAR-"].update(100, range=(0,100))
+					else:
+						oldDur = duration
+
+					# Current and Duration display
+					timeText=''
+					min = int(current/60)
+					sec = int((current - min*60))
+					if sec >= 10:
+						timeText = str(min) + ":" + str(sec)
+					else:
+						timeText = str(min) + ":0" + str(sec)
+					min = int(duration/60)
+					sec = int((duration - min*60))
+					if sec >= 10:
+						timeText = timeText + "/" + str(min) + ":" + str(sec)
+					else:
+						timeText = timeText + "/" + str(min) + ":0" + str(sec)
+					window["-TIME-"].update(timeText)
+
+					# Counts a play
+					if counted == False and currentTrack != "none":
+						if int(current) >= 50 and sec+min*60 > 50:
+							counted = True
+							f=open(playerHome + "cache/" + currentTrack, 'r', encoding='utf-8').readlines(0)
+							data=f[0] + f[1] + f[2] + f[3] + f[4] + f[5] + f[6] + f[7] + str(int(f[8])+1) + '\n' + f[9]
+		
+							f=open(playerHome + "cache/" + currentTrack, 'w', encoding='utf-8')
+							f.write(data)
+							f.close()
+			
+							if st == 2:
+								GenList()
+						elif sec+min*60 <= 50:
+							counted = True
+							f=open(playerHome + "cache/" + currentTrack, 'r', encoding='utf-8').readlines(0)
+							data=f[0] + f[1] + f[2] + f[3] + f[4] + f[5] + f[6] + f[7] + str(int(f[8])+1)+ '\n' + f[9]
+		
+							f=open(playerHome + "cache/" + currentTrack, 'w', encoding='utf-8')
+							f.write(data)
+							f.close()
+
+							if st == 2:
+								GenList()
+					else:
+						if not ".wav" in namePath and not ".ogg" in namePath and not ".mp3" in namePath and not ".mid" in namePath and counted == False:
+							if int(current) >= 50 and sec+min*60 > 50:
+								counted = True
+								f=open(namePath, 'r', encoding='utf-8').readlines(0)
+								data=f[0] + f[1] + f[2] + f[3] + str(int(f[4])+1) 
+			
+								f=open(namePath, 'w', encoding='utf-8')
+								f.write(data)
+								f.close()
+				
+							elif sec+min*60 <= 50:
+								counted = True
+								f=open(namePath, 'r', encoding='utf-8').readlines(0)
+								data=f[0] + f[1] + f[2] + f[3] + str(int(f[4])+1) 
+			
+								f=open(namePath, 'w', encoding='utf-8')
+								f.write(data)
+								f.close()
 			except:
 				pass
 
 			# Grabbing the slider
 			if event == "-BAR-":
-				time=200 # How long to wait before the program automatically moves the slider again
-				subprocess.check_output(('socat', '-', '/tmp/mpvsocket'), stdin=subprocess.Popen(('echo', '{ "command": ["set_property", "playback-time", ' + str(values["-BAR-"]/100) + '] }'), stdout=subprocess.PIPE).stdout, text=True)
+				try:
+					time=200 # How long to wait before the program automatically moves the slider again
+					if livestream == False:
+						subprocess.check_output(('socat', '-', '/tmp/mpvsocket'), stdin=subprocess.Popen(('echo', '{ "command": ["set_property", "playback-time", ' + str(values["-BAR-"]) + '] }'), stdout=subprocess.PIPE).stdout, text=True)
+					else:
+						subprocess.check_output(('socat', '-', '/tmp/mpvsocket'), stdin=subprocess.Popen(('echo', '{ "command": ["set_property", "playback-time", ' + str((values["-BAR-"]/100)*duration) + '] }'), stdout=subprocess.PIPE).stdout, text=True)
+				except:
+					pass
 
 		# LOCAL SONG EVENT
-		if event == "-LOCAL-" and len(values["-LOCAL-"]) > 0:
+		if event == "-LOCAL-" and len(values["-LOCAL-"]) > 0: # Prevents events from triggering after a subwindow is closed
 			if edit==False: # I still don't know how this works. I was tried 
-				if level == 0:
-					if values["-LOCAL-"][0] == localMain[1]:
-						path = playerHome + "playCache"
-						isCache=True
-						UpLocal(path, isCache)
+			
+				# Opens folders
+				if os.path.isdir(path + "/" + values["-LOCAL-"][0]) and level != 0 and len(values["-LOCAL-"][0]) > 0:
+					path = path + "/" + values["-LOCAL-"][0]				
+					UpLocal(path, isCache)
+					level = level + 1
 
-					elif values["-LOCAL-"][0] == localMain[2] and level == 0 and exists(localMusic):
+				# Queues a song 
+				elif level > 0 and len(values["-LOCAL-"][0]) > 0 and values["-LOCAL-"][0] != "[ALL]" and values["-LOCAL-"][0] != "...": 
+					if vAll==False: # Especially this part. HOW?
+						if values["-LOCAL-"][0] != "[TRACKS]": 					
+							queue.append(values["-LOCAL-"][0])
+							if isCache == True: # Cache
+								tempID=next(walk(path), (None, None, []))[2]
+								for i in range(len(tempID)):
+									if values["-LOCAL-"][0] +'\n' == open(path+'/'+tempID[i], 'r', encoding="UTF-8").readlines(0)[0]:
+										queuePaths.append(path + "/" + tempID[i])
+										break
+							else: # Local
+								queuePaths.append(path + "/" + values["-LOCAL-"][0])
+							window["-QUEUE-"].update(values=queue)
+						else: # Play all tracks in local folder
+							tempName=[]
+							tempName=PlayAll(path, isCache)
+							for i in range(len(tempName)):					
+								queue.append(tempName[i])
+								queuePaths.append(path+"/"+tempName[i])	
+
+					# If all is active on main level				
+					else:
+						if values["-LOCAL-"][0] != "[TRACKS]":
+							sel = window["-LOCAL-"].get_indexes()
+							if len(sel) > 0:
+								sel=sel[0]
+								for x in range(1,len(listed)):
+									if (listed[x][0] == locPaths[sel]):
+										queue.append(listed[x][1])
+										queuePaths.append(listed[x][0])
+										break 
+						else:
+							for i in range(3,len(locTracks)):					
+								queue.append(locTracks[i])
+								queuePaths.append(locPaths[i])
+					window["-QUEUE-"].update(values=queue)
+
+				if level == 0:
+					if values["-LOCAL-"][0] == localMain[1]: # Play Cache
+						if sp != "null":
+							path = playerHome + "playCache"
+							isCache=True
+							UpLocal(path, isCache)
+						else:
+							level=-1
+
+					elif values["-LOCAL-"][0] == localMain[2] and level == 0 and exists(localMusic): # Local Music
 						path = localMusic
 						isCache=False
 						UpLocal(path, isCache)
 
-					else:
+					else: # All tab
 						vAll=True
 						path="all"
 						if exists(localMusic):
-							locTracks = ViewAllCondense(ViewAll(localMusic), ViewAll(playerHome + "playCache"))
-						else:
+							if sp != "null":
+								locTracks = ViewAllCondense(ViewAll(localMusic), ViewAll(playerHome + "playCache"))
+							else:
+								locTracks = ViewAllCondense(ViewAll(localMusic), [])
+						elif sp != "null":
 							locTracks = ViewAllCondense([], ViewAll(playerHome + "playCache"))
 						window["-LOCAL-"].update(values=locTracks)
 					level=level+1	
@@ -954,80 +1419,29 @@ def Player():
 					path=path+"/ "
 					vAll=True			
 					level=level+1	
-			
-				# Opens folders
-				if os.path.isdir(path + "/" + values["-LOCAL-"][0]) and level != 0 and len(values["-LOCAL-"][0]) > 0:
-					path = path + "/" + values["-LOCAL-"][0]				
-					UpLocal(path, isCache)
-					level = level + 1
 
-				else:
-
-					# Queues a song 
-					if vAll==False: # Especially this part. HOW?
-						if values["-LOCAL-"][0] != "[TRACKS]": 					
-							for i in range(1, len(listed)):
-								if (listed[i][0] == path + "/" + values["-LOCAL-"][0]):
-									queue.append(listed[i][1])
-									queuePaths.append(listed[i][0])
-									if repeat == True:
-										prequeue.append(listed[i][1])
-										prequeuePaths.append(listed[i][0])
-									window["-QUEUE-"].update(values=queue)
-									break
-						else: # Play all tracks in local folder
-							tempName=[]
-							tempName=PlayAll(path, isCache)
-							for i in range(len(tempName)):					
-								queue.append(tempName[i])
-								queuePaths.append(path+"/"+tempName[i])
-								if repeat == True:
-									prequeue.append(tempName[i])	
-									prequeuePaths.append(path+"/"+tempName[i])		
-
-					# If all is active on main level				
-					else:
-						if values["-LOCAL-"][0] != "[TRACKS]":
-							sel = window["-LOCAL-"].get_indexes()
-							if len(sel) > 0:
-								sel=sel[0]
-								for x in range(1,len(listed)):
-									if (listed[x][0] == locPaths[sel]):
-										queue.append(listed[x][1])
-										queuePaths.append(listed[x][0])
-										if repeat == True:
-											prequeue.append(listed[x][1])
-											prequeuePaths.append(listed[x][0])		
-											window["-QUEUE-"].update(values=queue)
-										break 
-						else:
-							for i in range(3,len(locTracks)):					
-								queue.append(locTracks[i])
-								queuePaths.append(locPaths[i])
-								if repeat == True:
-									prequeue.append(locTracks[i])
-									prequeuePaths.append(locPaths[i])
-					window["-QUEUE-"].update(values=queue)
-
-			if edit == True and level > 0 and str(values["-LOCAL-"][0]) != "..." and str(values["-LOCAL-"][0]) != "[TRACKS]" and str(values["-LOCAL-"][0]) != "[ALL]" and len(str(values["-LOCAL-"][0])) > 0:
+			if edit == True and level > 0 and str(values["-LOCAL-"][0]) != "..." and str(values["-LOCAL-"][0]) != "[TRACKS]" and str(values["-LOCAL-"][0]) != "[ALL]" and len(str(values["-LOCAL-"][0])) > 0: # All this just to edit
 				r=0			
+				
 				for i in range(0, len(listed)):
-					if ".wav" in str(values["-LOCAL-"][0]) or ".ogg" in str(values["-LOCAL-"][0]) or ".mp3" in str(values["-LOCAL-"][0]) or ".mid" in str(values["-LOCAL-"][0]):
-						if str(listed[i][1]) == str(values["-LOCAL-"][0][0:len(str(values["-LOCAL-"][0]))-4]):
-							r=subwindows.Edit(listed[i][1], ID[i], listed[i][0], 2)
-							event="-EDIT-"
-							break
-					else:
-						if str(listed[i][1]) == str(values["-LOCAL-"][0]):					
+					if isCache == False:
+						if ".wav" in values["-LOCAL-"][0] or ".ogg" in values["-LOCAL-"][0] or ".mp3" in values["-LOCAL-"][0] or ".mid" in values["-LOCAL-"][0]:
+							if listed[i][1] == values["-LOCAL-"][0][0:len(values["-LOCAL-"][0])-4]:
+								r=subwindows.Edit(listed[i][1], ID[i], listed[i][0], 2)
+								event="-EDIT-"
+								break
+					elif not ".wav" in listed[i][0] and not ".ogg" in listed[i][0] and not ".mp3" in listed[i][0] and not ".mid" in listed[i][0]:
+						if listed[i][1] == values["-LOCAL-"][0]:	
 							a=0
-							for x in range(len(listed[i][0])):
+							sendID=''
+							for x in range(len(playerHome)+10,len(listed[i][0])):
 								if listed[i][0][x:x+1] == '/':
-									a=x
-							sendID=listed[i][0][0:a] + "/" + ID[i][32:]
+									sendID=listed[i][0][0:x] + "/" + ID[i][32:]
+									break
 							r=subwindows.Edit(listed[i][1], ID[i], sendID, 1)
 							event="-EDIT-"
 							break
-				if r == 1:
+				if r == 1 or r == 2:
 					GenList()
 					if exists(localMusic):
 						ViewAllCondense(ViewAll(localMusic), ViewAll(playerHome + "playCache"))				
@@ -1039,60 +1453,48 @@ def Player():
 					window["-LOCAL-"].update(values=localMain)
 
 		# SONG SELECTED EVENT
-		if event == "-SONGS-" and len(values["-SONGS-"]) > 0:
+		if event == "-SONGS-" and len(values["-SONGS-"][0]) > 0:
 			if edit == False:
 				if "[PLAY ALL]" in values["-SONGS-"][0]:
 					for i in range(1,len(spotList)):
+						if len(spotList[i]) > 0 and not "---" in spotList[i][0:3] and not "---" in spotList[i][len(spotList[i])-3:]: 
+							queue.append(spotList[i])
+							queuePaths.append("")
+					window["-QUEUE-"].update(values=queue)
+				elif "---" in values["-SONGS-"][0][0:3] and "---" in values["-SONGS-"][0][len(values["-SONGS-"][0])-3:]:
+					for i in range(window["-SONGS-"].get_indexes()[0]+1, len(spotList)):
+						if len(spotList[i]) == 0:
+							break
 						queue.append(spotList[i])
 						queuePaths.append("")
-						if repeat == True:
-							prequeue.append(spotList[i])
-							prequeuePaths.append("")
 					window["-QUEUE-"].update(values=queue)
+						
 				else:
-					for i in range(len(listed)): # Checks if the song needs to be added to queue
-						if (listed[i][0] == values["-SONGS-"][0]):
-							queue.append(listed[i][0])
-							queuePaths.append("")
-							if repeat == True:
-								prequeue.append(listed[i][0])
-								prequeuePaths.append("")
-							window["-QUEUE-"].update(values=queue)
-							break      
+					queue.append(values["-SONGS-"][0])
+					queuePaths.append("")
+					window["-QUEUE-"].update(values=queue)   
 			if edit == True:
 				r=0
-				for i in range(0, len(listed)):
+				for i in range(len(listed)):
 					if str(listed[i][0]) == str(values["-SONGS-"][0]):
 						editI=i				
 						r = subwindows.Edit(listed[i][0], ID[i], listed[i][1], 0)
 						event="-EDIT-"
 						break
-				if r == 1:				
+				if r == 1 or r == 2:				
 					GenList()
-					window["-SONGS-"].update(values=spotList)
+					if search == False or r == 2:
+						window["-SONGS-"].update(values=spotList)
 
 		# QUEUE Event
 		if event == "-QUEUE-" and len(values["-QUEUE-"]) > 0:
-			if values["-QUEUE-"][0] == "[CLEAR]":
-				if repeat==True:
-					for i in range(1,len(queue)):
-						for x in range(len(prequeue)):
-							if prequeue[x] in queue[i]:
-								del prequeue[x]
-								del prequeuePaths[x]
-								break
+			if values["-QUEUE-"][0][0:7] == "[CLEAR]":
 				queue=["[CLEAR]"]
 				queuePaths=[""]
 				window["-QUEUE-"].update(values=queue)
 			else:
 				for i in range(1,len(queue)):
 					if queue[i] == str(values["-QUEUE-"][0]):
-						if repeat == True:
-							for x in range(len(prequeue)):
-								if (prequeue[x] == queue[i]):
-									del prequeue[x]
-									del prequeuePaths[x]
-									break
 						del queue[i]
 						del queuePaths[i]
 						window["-QUEUE-"].update(values=queue)
@@ -1103,17 +1505,16 @@ def Player():
 			try:
 				tempQ=tempQ.get(0.005)
 				GenList()
-				window["-SONGS-"].update(values=spotList)
+				if search == False:
+					window["-SONGS-"].update(values=spotList)
 				for i in range(len(tempQ)):
 					for x in range(len(ID)):
 						if tempQ[i] == listed[x][0]:                
 							queue.append(listed[x][0])
 							queuePaths.append("")
-							if repeat == True:
-								prequeue.append(listed[x][0])
-								prequeuePaths.append("")
 							break
 				navify = False
+				queue[0] = "[CLEAR]"
 				window["-QUEUE-"].update(values=queue)
 				window["-NAVIFY-"].update(disabled=False)
 				tempQ=[]
@@ -1122,60 +1523,61 @@ def Player():
 
 		# Checks if there are songs queued
 		if len(queue) > 1 and isPlaying == False:
+			durSnap=0
 			tempName = ""
-			valid=0
+			namePath=""
+			valid=False
 			a=1
-			tname=""
 			if shuffle == True and len(queue) > 2 and isPrev == False:
 				a = random.randrange(1,len(queue))
 			isPrev = False
 			for i in range(len(listed)):
-				# Checks to see if the song is a local one
-				skip=False		
-				tname=""		
-				if listed[i][0] == queuePaths[a]:
+				# Checks to see if the song is a local or cached			
+				if listed[i][0] == queuePaths[a] and len(queuePaths[a]) > 0: # Local cache and songs
+					valid=True
 					name=listed[i][1]
-					skip = True						
 					window["-PLAYING-"].update("Now Playing: " + name)
-				if listed[i][0] == queue[a] or skip==True:
-					valid=1
-					if skip==False:
-						window["-PLAYING-"].update("Now Playing: " + listed[i][0])
-						name = listed[i][0]	
-						prevSongs.append(listed[i][0])
-						prevPaths.append("")
-						currentTrack = listed[i][1]
-					else:
-						prevSongs.append(listed[i][1])
-						prevPaths.append(listed[i][0])
-						currentTrack = "none"	
-						
-					p = Process(target=Play, args=(i, name, ), daemon=True)
-					p.start()
-					del queue[a]   
-					del queuePaths[a]           
-					window["-QUEUE-"].update(values=queue)
-					play=True
-					window["-PLAY-"].update(image_filename=playerHome + "icons/pause.png")                
-					isPlaying=True	
-					liked="elike.png"
-					window["-LIKE-"].update(image_filename=playerHome + "icons/elike.png")
-					for c in range(0,len(likes)):
-						if (listed[i][1] == likes[c]):
-							window["-LIKE-"].update(image_filename=playerHome + "icons/like.png")
-							liked="like.png"
-							break          
-					
+					namePath=queuePaths[a]
+					prevSongs.append(listed[i][1])
+					prevPaths.append(listed[i][0])
+					currentTrack = "none"
 					break
-			if valid==0:
+				elif listed[i][0] == queue[a] and len(queuePaths[a]) == 0: # Spotify
+					valid=True
+					window["-PLAYING-"].update("Now Playing: " + listed[i][0])
+					name = listed[i][0]
+					prevSongs.append(listed[i][0])
+					prevPaths.append("")
+					currentTrack = listed[i][1]
+					break
+			if valid == True:
+				if repeat == True:
+					prequeue.append(name)
+					prequeuePaths.append(namePath)
+				counted=False
+				p = Process(target=Play, args=(i, name, ), daemon=True)
+				p.start()
+				del queue[a]   
+				del queuePaths[a]           
+				play=True
+				window["-PLAY-"].update(image_filename=playerHome + "icons/pause.png")                
+				isPlaying=True	
+				liked="elike.png"
+				window["-LIKE-"].update(image_filename=playerHome + "icons/elike.png")
+				for c in range(0,len(likes)):
+					if (listed[i][1] == likes[c]):
+						window["-LIKE-"].update(image_filename=playerHome + "icons/like.png")
+						liked="like.png"
+						break
+			else:
 				del queue[a]
 				del queuePaths[a]
-				window["-QUEUE-"].update(values=queue)
+			window["-QUEUE-"].update(values=queue)
 
 		# END OF SONG WITH NO QUEUE EVENT    
 		if len(queue) == 1 and isPlaying == False:     
-			tempName=""    
-			if repeat == True:
+			tempName=""
+			if repeat == True and len(prequeue) != 0:
 				queue = ["[CLEAR]"]
 				queuePaths=[""]
 				for i in range(len(prequeue)):
@@ -1221,11 +1623,20 @@ def Player():
 			subprocess.Popen(["mv", playerHome + "cache/" + currentTrack, playerHome + "blacklist/" ])
 			for i in range(len(listed)):
 				if listed[i][1] == currentTrack:
+					for x in range(len(spotList)):
+						if spotList[x] == listed[i][0]:
+							if  "---" in spotList[x-1][0:3] and  "---" in spotList[x-1][len(spotList[x])-4:] and len(spotList[x+1]) == 0:
+								del spotList[x-1]
+								del spotList[x-1]
+								del spotList[x-1]
+							else:													
+								del spotList[x]
+							break
 					del listed[i]
 					del ID[i]
-					del spotList[i]
 					break
-			window["-SONGS-"].update(values=spotList)
+			if search == False:
+					window["-SONGS-"].update(values=spotList)
 			event="-SKIP-"
 
 		# LIKE
@@ -1250,10 +1661,7 @@ def Player():
 					except:
 						pass
 				window["-LIKE-"].update(image_filename=playerHome + "icons/like.png")            
-			likes = GenLikes()
-			f = open(playerHome + "icons/likes.pkl", 'wb')
-			pickle.dump(likes, f)
-			f.close()
+			likes = GenLikes()			
 
 		# EDIT CLICKED EVENT
 		if event == "-EDIT-":
@@ -1266,45 +1674,47 @@ def Player():
 				edit = False
 
 		# Search Box
-		if values["-INSEARCH-"] and len(values["-INSEARCH-"]) > 0 and len(values["-INSEARCH-"]) != oldLen:
-			oldLen = len(values["-INSEARCH-"])
-			newList=[]
-			for i in range(1,len(spotList)):
-				if values["-INSEARCH-"].lower() in spotList[i].lower():
-					newList.append(spotList[i])
-			tempSort=[]
-			l = len(values["-INSEARCH-"].lower())+1
-			for x in range(1,len(values["-INSEARCH-"].lower())+1):	
+		if sp != "null":
+			if values["-INSEARCH-"] and len(values["-INSEARCH-"]) > 0 and len(values["-INSEARCH-"]) != oldLen:
+				oldLen = len(values["-INSEARCH-"])
+				newList=[]
+				for i in range(1,len(spotList)):
+					if values["-INSEARCH-"].lower() in spotList[i].lower() and not "---" in spotList[i][0:3] and not "---" in spotList[i][len(spotList)-3:]:
+						newList.append(spotList[i])
+				tempSort=[]
+				l = len(values["-INSEARCH-"].lower())+1
+				for x in range(1,len(values["-INSEARCH-"].lower())+1):	
+					for i in range(len(newList)):
+						if values["-INSEARCH-"].lower()[0:l-x] == newList[i].lower()[0:l-x]:
+							valid=1
+							for a in range(len(tempSort)):
+								if newList[i] == tempSort[a]:
+									valid=0
+									break
+							if valid == 1:							
+								tempSort.append(newList[i])
 				for i in range(len(newList)):
-					if values["-INSEARCH-"].lower()[0:l-x] == newList[i].lower()[0:l-x]:
-						valid=1
-						for a in range(len(tempSort)):
-							if newList[i] == tempSort[a]:
-								valid=0
-								break
-						if valid == 1:							
-							tempSort.append(newList[i])
-			for i in range(len(newList)):
-				valid=0
-				for x in range(len(tempSort)):
-					if newList[i] == tempSort[x]:
-						valid=1	
-						break				
-				if valid == 0:
-					tempSort.append(newList[i])
-			window["-SONGS-"].update(values=tempSort)
+					valid=0
+					for x in range(len(tempSort)):
+						if newList[i] == tempSort[x]:
+							valid=1	
+							break				
+					if valid == 0:
+						tempSort.append(newList[i])
+				window["-SONGS-"].update(values=tempSort)
 
-		# SEARCH
-		if event == "-SEARCH-":
-			if search == True:
-				search=False
-				window["-INSEARCH-"].update("",disabled=True)
-				window["-SONGS-"].update(values=spotList)
-				window["-SEARCH-"].update(button_color=accent)
-			else:
-				search=True
-				window["-SEARCH-"].update(button_color=highlight)        
-				window["-INSEARCH-"].update(disabled=False)  
+			# SEARCH
+			if event == "-SEARCH-":
+				if search == True:
+					search=False
+					tempSort=[]
+					window["-INSEARCH-"].update("",disabled=True)
+					window["-SONGS-"].update(values=spotList)
+					window["-SEARCH-"].update(button_color=accent)
+				else:
+					search=True
+					window["-SEARCH-"].update(button_color=highlight)        
+					window["-INSEARCH-"].update(disabled=False)  
 
 		# Skip/Next
 		if event == "-SKIP-" and isPlaying == True:
@@ -1321,6 +1731,7 @@ def Player():
 				subprocess.check_output(('socat', '-', '/tmp/mpvsocket'), stdin=subprocess.Popen(('echo', '{"command": ["set_property", "pause", false]}'), stdout=subprocess.PIPE).stdout, text=True)
 				play = True
 				window["-PLAY-"].update(image_filename=playerHome + "icons/pause.png")				
+
 		# PREVIOUS
 		if event == "-PREV-" and len(prevSongs) > 0:
 			tempQ = list(queue[1:])
@@ -1369,7 +1780,8 @@ def Player():
 			else:
 				ViewAllCondense([], ViewAll(playerHome + "playCache"))						
 			window["-LOCAL-"].update(values=localMain)
-			window["-SONGS-"].update(values=spotList)
+			if search == False:
+				window["-SONGS-"].update(values=spotList)
 
 		# PLAYLIST BUTTON EVENT
 		if event == "-PLAYLIST-":
@@ -1378,21 +1790,19 @@ def Player():
 			for i in range(len(temp[0])):
 				queue.append(temp[0][i])
 				queuePaths.append(temp[1][i])
-				if repeat == True:
-					prequeue.append(temp[0][i])
-					prequeuePaths.append(temp[1][i])
 			window["-QUEUE-"].update(values=queue)   
          
 		# SETTINGS        
 		if event == "-SETTINGS-":
-			r = subwindows.Settings(sp)
+			r = subwindows.Settings(likesName,likes)
 			if r == 1:
 				window.close()
 				window = reloadNavify(queue, name, liked)
 			else:
 				GenList()			
 				window["-LOCAL-"].update(values=localMain)
-				window["-SONGS-"].update(values=spotList)
+				if search == False:
+					window["-SONGS-"].update(values=spotList)
 						
 			settings = pickle.load(open(playerHome + "settings.pkl", 'rb'))
 			if localMusic != settings[2]:			
@@ -1407,19 +1817,89 @@ def Player():
 			window["-NAVIFY-"].update(disabled=True)
 			navify = True
 
-		# NAVIFY RCLICK EVENT
-		for i in range(len(plNames)):
-			if plNames[i] == event and not "Close" in event and navify == False:
-				pool = ThreadPool(processes=1)
-				tempQ = pool.apply_async(getPlaylistSongs, args=(plIDS[i],))
-				window["-NAVIFY-"].update(disabled=True)
-				navify = True
+		if event != "Close":
+			# NAVIFY RCLICK EVENT
+			for i in range(len(plNames)):
+				if plNames[i] == event and navify == False:
+					pool = ThreadPool(processes=1)
+					tempQ = pool.apply_async(getPlaylistSongs, args=(plIDS[i],))
+					window["-NAVIFY-"].update(disabled=True)
+					navify = True
 
+			# SONGS RCLICK EVENT
+			if event == "Name Ascending":
+				st = 0
+				descending=False
+				GenList()
+				if search == False:
+					window["-SONGS-"].update(values=spotList)
+			if event == "Name Descending":
+				st = 0
+				descending=True
+				GenList()
+				if search == False:
+					window["-SONGS-"].update(values=spotList)
+			if event == "Artist Ascending":
+				st = 1
+				descending=False
+				GenList()
+				if search == False:
+					window["-SONGS-"].update(values=spotList)
+			if event == "Artist Descending":
+				st = 1
+				descending=True
+				GenList()
+				if search == False:
+					window["-SONGS-"].update(values=spotList)
+			if event == "Play Count High to Low":
+				st = 2
+				descending=True
+				GenList()
+				if search == False:
+					window["-SONGS-"].update(values=spotList)
+			if event == "Play Count Low to High":
+				st = 2
+				descending=False
+				GenList()
+				if search == False:
+					window["-SONGS-"].update(values=spotList)
+			if event == "Split":
+				st = 3
+				GenList()
+				window["-SONGS-"].update(values=spotList)
+			if event == "Year High to Low":
+				st = 4
+				descending=True
+				GenList()
+				if search == False:
+					window["-SONGS-"].update(values=spotList)
+			if event == "Year Low to High":
+				st = 4
+				descending=False
+				GenList()
+				if search == False:
+					window["-SONGS-"].update(values=spotList)
+			if event == "Duration High to Low":
+				st = 5
+				descending=True
+				GenList()
+				if search == False:
+					window["-SONGS-"].update(values=spotList)
+			if event == "Duration Low to High":
+				st = 5
+				descending=False
+				GenList()
+				if search == False:
+					window["-SONGS-"].update(values=spotList)
 
 		if time != 0:
 			time=time-100     
 
 print("Starting player...")
 Player() # Starts the GUI
-print("Closing...")
+t=pickle.load(open(playerHome + "theme.pkl", 'rb'))
+if descending == True:
+	st = st + 6
+t[11] = st
+pickle.dump(t, open(playerHome + "theme.pkl", 'wb'))
 KillMPV() 
